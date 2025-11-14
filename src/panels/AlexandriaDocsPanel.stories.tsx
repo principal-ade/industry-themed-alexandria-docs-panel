@@ -1,31 +1,61 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import { ThemeProvider } from '@a24z/industry-theme';
 import { AlexandriaDocsPanel } from './AlexandriaDocsPanel';
-import type { PanelComponentProps, MarkdownFile } from '../types';
+import type { PanelComponentProps, DataSlice } from '../types';
+
+interface MarkdownFile {
+  path: string;
+  title?: string;
+  lastModified?: number;
+}
 
 // Mock panel context
 const createMockContext = (
   markdownFiles: MarkdownFile[] = [],
   loading = false
-): PanelComponentProps['context'] => ({
-  repositoryPath: '/mock/repository',
-  repository: null,
-  markdownFiles,
-  gitStatus: {
-    staged: [],
-    unstaged: [],
-    untracked: [],
-    deleted: [],
-  },
-  gitStatusLoading: false,
-  fileTree: null,
-  packages: null,
-  quality: null,
-  loading,
-  hasSlice: (slice: string) => slice === 'markdown',
-  isSliceLoading: (slice: string) => slice === 'markdown' && loading,
-  refresh: async () => {},
-});
+): PanelComponentProps['context'] => {
+  const markdownSlice: DataSlice<MarkdownFile[]> = {
+    scope: 'repository',
+    name: 'markdown',
+    data: markdownFiles,
+    loading,
+    error: null,
+    refresh: async () => {},
+  };
+
+  const slices = new Map<string, DataSlice>();
+  slices.set('markdown', markdownSlice);
+
+  return {
+    currentScope: {
+      type: 'repository',
+      repository: {
+        name: 'mock-repository',
+        path: '/mock/repository',
+      },
+    },
+    slices: slices as ReadonlyMap<string, DataSlice>,
+    getSlice: <T,>(name: string): DataSlice<T> | undefined => {
+      return slices.get(name) as DataSlice<T> | undefined;
+    },
+    getWorkspaceSlice: <T,>(name: string): DataSlice<T> | undefined => {
+      return name === 'markdown'
+        ? (slices.get(name) as DataSlice<T> | undefined)
+        : undefined;
+    },
+    getRepositorySlice: <T,>(name: string): DataSlice<T> | undefined => {
+      return name === 'markdown'
+        ? (slices.get(name) as DataSlice<T> | undefined)
+        : undefined;
+    },
+    hasSlice: (name: string) => slices.has(name),
+    isSliceLoading: (name: string) => {
+      const slice = slices.get(name);
+      return slice ? slice.loading : false;
+    },
+    refresh: async () => {},
+  };
+};
 
 // Mock panel actions
 const createMockActions = (): PanelComponentProps['actions'] => ({
@@ -98,14 +128,17 @@ export const WithDocuments: Story = {
       },
       {
         path: '/mock/repository/docs/architecture.md',
+        title: 'Architecture Overview',
         lastModified: new Date('2025-11-10').getTime(),
       },
       {
         path: '/mock/repository/docs/api/endpoints.md',
+        title: 'API Endpoints',
         lastModified: new Date('2025-11-08').getTime(),
       },
       {
         path: '/mock/repository/docs/getting-started.md',
+        title: 'Getting Started Guide',
         lastModified: new Date('2025-11-05').getTime(),
       },
     ]),
@@ -120,6 +153,7 @@ export const ManyDocuments: Story = {
     context: createMockContext(
       Array.from({ length: 50 }, (_, i) => ({
         path: `/mock/repository/docs/section-${Math.floor(i / 10)}/doc-${i}.md`,
+        title: `Document ${i}`,
         lastModified: new Date(2025, 10, 14 - i).getTime(),
       })),
     ),

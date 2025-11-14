@@ -51,3 +51,6 @@ bun.lockb
 .nuxt/
 out/
 .turbo/
+
+# Task management
+.palace-work/

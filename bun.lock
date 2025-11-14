@@ -11,6 +11,7 @@
       "devDependencies": {
         "@chromatic-com/storybook": "^3.2.2",
         "@eslint/js": "^9.32.0",
+        "@principal-ade/panel-framework-core": "^0.1.2",
         "@storybook/addon-essentials": "^8.5.0",
         "@storybook/addon-interactions": "^8.5.0",
         "@storybook/addon-links": "^8.5.0",
@@ -194,6 +195,10 @@
     "@nodelib/fs.walk": ["@nodelib/fs.walk@1.2.8", "", { "dependencies": { "@nodelib/fs.scandir": "2.1.5", "fastq": "^1.6.0" } }, "sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg=="],
 
     "@pkgjs/parseargs": ["@pkgjs/parseargs@0.11.0", "", {}, "sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg=="],
+
+    "@principal-ade/panel-framework-core": ["@principal-ade/panel-framework-core@0.1.2", "", { "dependencies": { "@principal-ai/repository-abstraction": "^0.2.3" }, "peerDependencies": { "react": ">=18.0.0", "react-dom": ">=18.0.0" } }, "sha512-b3Chg0A2Nr1qFyuNI4/KGrwJ0GFZ8cvB9OEbcnBN9NplfyN/aI+5+le9H1Hfh161s3VjAPDDMi61aTJtIJL7iQ=="],
+
+    "@principal-ai/repository-abstraction": ["@principal-ai/repository-abstraction@0.2.4", "", {}, "sha512-UxVmCiUA0rhgQek+yxfWIoA8VEYCfLljU/eHd4Vx/MwvISAas4IVYS/i8kFmZD4q92XHYBFzyZyOQSg9sIq2FA=="],
 
     "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.0-beta.27", "", {}, "sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA=="],
 

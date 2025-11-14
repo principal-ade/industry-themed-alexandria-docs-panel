@@ -7,32 +7,32 @@ import type { PanelDefinition, PanelContextValue } from './types';
  */
 export const panels: PanelDefinition[] = [
   {
-    id: 'principal-ade.alexandria-docs',
-    name: 'Alexandria Docs',
-    icon: '📚',
-    version: '0.1.0',
-    author: 'Principal AI',
-    description: 'View and manage repository documentation with Alexandria',
+    metadata: {
+      id: 'principal-ade.alexandria-docs',
+      name: 'Alexandria Docs',
+      icon: '📚',
+      version: '0.1.1',
+      author: 'Principal AI',
+      description: 'View and manage repository documentation with Alexandria',
+      surfaces: ['manager', 'agent'],
+      slices: ['markdown'],
+    },
     component: AlexandriaDocsPanel,
 
     // Optional: Called when this specific panel is mounted
     onMount: async (context: PanelContextValue) => {
       // eslint-disable-next-line no-console
-      console.log('[Alexandria] Panel mounted for repo:', context.repositoryPath);
+      console.log(
+        '[Alexandria] Panel mounted:',
+        context.currentScope.type,
+        context.currentScope.repository?.path || context.currentScope.workspace?.path
+      );
     },
 
     // Optional: Called when this specific panel is unmounted
     onUnmount: async (_context: PanelContextValue) => {
       // eslint-disable-next-line no-console
       console.log('[Alexandria] Panel unmounted');
-    },
-
-    // Optional: Called when data slices change
-    onDataChange: (slice, data) => {
-      if (slice === 'markdown') {
-        // eslint-disable-next-line no-console
-        console.log('[Alexandria] Markdown data updated:', data);
-      }
     },
   },
 ];

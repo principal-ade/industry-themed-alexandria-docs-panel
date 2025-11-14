@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": 1763129831403,
+  "tasks": {
+    "task-1763129831402-8xj6slmq6": {
+      "id": "task-1763129831402-8xj6slmq6",
+      "status": "pending",
+      "priority": "high",
+      "directoryPath": "",
+      "senderId": "web-ade",
+      "tags": [
+        "alexandria-docs-panel",
+        "context",
+        "type-mismatch"
+      ],
+      "receivedAt": 1763129831402,
+      "updatedAt": 1763129831402,
+      "filePath": "active/task-1763129831402-8xj6slmq6.task.md"
+    }
+  },
+  "byStatus": {
+    "pending": [
+      "task-1763129831402-8xj6slmq6"
+    ],
+    "acknowledged": [],
+    "in_progress": [],
+    "completed": [],
+    "failed": []
+  },
+  "bySender": {
+    "web-ade": [
+      "task-1763129831402-8xj6slmq6"
+    ]
+  },
+  "byADE": {}
+}

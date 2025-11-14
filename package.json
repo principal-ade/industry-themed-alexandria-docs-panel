@@ -1,6 +1,6 @@
 {
   "name": "@principal-ade/alexandria-docs-panel",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Alexandria documentation panel for Principal ADE - view and manage repository documentation",
   "type": "module",
   "main": "dist/panels.bundle.js",
@@ -47,6 +47,7 @@
   "devDependencies": {
     "@chromatic-com/storybook": "^3.2.2",
     "@eslint/js": "^9.32.0",
+    "@principal-ade/panel-framework-core": "^0.1.2",
     "@storybook/addon-essentials": "^8.5.0",
     "@storybook/addon-interactions": "^8.5.0",
     "@storybook/addon-links": "^8.5.0",

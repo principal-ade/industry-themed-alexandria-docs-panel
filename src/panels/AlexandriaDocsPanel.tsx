@@ -11,39 +11,58 @@ export interface AlexandriaDocItemData {
   mtime?: Date;
 }
 
+interface MarkdownFile {
+  path: string;
+  title?: string;
+  lastModified?: number;
+}
+
 export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
   context,
   actions,
 }) => {
   const { theme } = useTheme();
 
-  // Extract markdown files from context
+  // Extract markdown files from markdown slice
   const documents = useMemo(() => {
-    if (!context.markdownFiles) {
+    // Get the markdown slice
+    const markdownSlice = context.getSlice<MarkdownFile[]>('markdown');
+
+    // If no slice or still loading, return empty array
+    if (!markdownSlice || markdownSlice.loading || !markdownSlice.data) {
       return [];
     }
 
+    // Get the repository path from current scope
+    const repositoryPath =
+      context.currentScope.repository?.path ||
+      context.currentScope.workspace?.path ||
+      '';
+
     // Convert markdown files to our document format
-    const docItems: AlexandriaDocItemData[] = context.markdownFiles.map((file) => {
+    const docItems: AlexandriaDocItemData[] = markdownSlice.data.map((file) => {
       const fileName = file.path.split('/').pop() || file.path;
-      const name = fileName.replace(/\.(md|MD)$/i, '');
+      const name = file.title || fileName.replace(/\.(md|MD)$/i, '');
 
       return {
         path: file.path,
         name: name,
-        relativePath: file.path.replace(context.repositoryPath + '/', ''),
+        relativePath: repositoryPath
+          ? file.path.replace(repositoryPath + '/', '')
+          : file.path,
         mtime: file.lastModified ? new Date(file.lastModified) : undefined,
       };
     });
 
     return docItems;
-  }, [context.markdownFiles, context.repositoryPath]);
+  }, [context]);
 
   const handleDocumentClick = (path: string) => {
     actions.openFile?.(path);
   };
 
-  const isLoading = context.loading;
+  // Check if markdown slice is loading
+  const isLoading = context.isSliceLoading('markdown');
 
   return (
     <div
