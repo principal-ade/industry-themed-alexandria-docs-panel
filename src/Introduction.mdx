@@ -1,0 +1,109 @@
+import { Meta } from '@storybook/blocks';
+
+<Meta title="Introduction" />
+
+# Alexandria Docs Panel
+
+Welcome to the **Alexandria Docs Panel** documentation!
+
+This panel extension displays and manages repository documentation for Principal ADE applications.
+
+## What Is This Panel?
+
+The Alexandria Docs Panel is a React component distributed via NPM that can be dynamically loaded into panel-compatible host applications. It provides a simple, clean interface for viewing markdown documentation files in a repository.
+
+### Current Features (Milestone 1 - MVP)
+
+- 📄 **Document List** - Display all markdown files from repository
+- 🖱️ **Click to Open** - Open documents in the host application
+- 🔄 **Auto-Refresh** - Updates automatically when data changes
+- 🎨 **Industry Theme** - Consistent styling with other Principal ADE components
+- ⚡ **Lightweight** - ~20KB bundle (6KB gzipped)
+
+### Planned Features (Milestone 2)
+
+- 🔍 **Search & Filter** - Find documents quickly
+- 📊 **Sort Options** - By name or modification date
+- 🏷️ **Status Indicators** - Tracked vs untracked documents
+- 🗂️ **File Tree** - View associated files from CodebaseViews
+- 🗺️ **Map Integration** - Highlight documented files on code visualizations
+- 📈 **Coverage View** - See documentation coverage metrics
+
+## How It Works
+
+### Data Requirements
+
+The panel requires the host application to provide:
+
+```typescript
+interface MarkdownFile {
+  path: string;           // Full file system path
+  title?: string;         // Optional document title
+  lastModified: number;   // Unix timestamp
+}
+```
+
+### Actions Used
+
+- `openFile(filePath: string)` - Opens documents when clicked
+
+## Panel Architecture
+
+```
+AlexandriaDocsPanel
+├── Header (document count)
+├── Document List
+│   └── AlexandriaDocItem (per document)
+│       ├── Icon
+│       ├── Name
+│       └── Relative Path
+└── Empty/Loading States
+```
+
+## Stories
+
+Explore the panel in different states:
+
+- **Empty State** - No documents found
+- **Loading State** - Data is loading
+- **With Documents** - 5 example documents
+- **Many Documents** - 50 documents for scroll testing
+
+## Installation
+
+```bash
+npm install @principal-ade/alexandria-docs-panel
+# or
+bun install @principal-ade/alexandria-docs-panel
+```
+
+## Usage
+
+```typescript
+import { panels } from '@principal-ade/alexandria-docs-panel';
+
+// Panel is auto-discovered via "panel-extension" keyword
+// No manual registration needed if your host scans packages
+```
+
+## Development
+
+```bash
+# Install dependencies
+bun install
+
+# Start Storybook
+bun run storybook
+
+# Build panel
+bun run build
+
+# Type check
+bun run typecheck
+```
+
+## More Information
+
+- [GitHub Repository](https://github.com/principal-ai/industry-themed-alexandria-docs-panel)
+- [Design Document](../DESIGN.md)
+- [Panel Framework Spec](https://github.com/principal-ade/panel-framework)
