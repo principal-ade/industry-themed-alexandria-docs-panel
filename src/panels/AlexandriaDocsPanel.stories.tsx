@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react';
-import { ThemeProvider } from '@a24z/industry-theme';
+import { ThemeProvider } from '@principal-ade/industry-theme';
 import { AlexandriaDocsPanel } from './AlexandriaDocsPanel';
 import type { PanelComponentProps, DataSlice } from '../types';
 

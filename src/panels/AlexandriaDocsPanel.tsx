@@ -1,6 +1,6 @@
-import React, { useMemo } from 'react';
-import { useTheme } from '@a24z/industry-theme';
-import { Book, FileText, Loader } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { useTheme } from '@principal-ade/industry-theme';
+import { Book, FileText, Loader, Search, X } from 'lucide-react';
 import type { PanelComponentProps } from '../types';
 import { AlexandriaDocItem } from './components/AlexandriaDocItem';
 
@@ -22,6 +22,7 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
   actions,
 }) => {
   const { theme } = useTheme();
+  const [filterText, setFilterText] = useState('');
 
   // Extract markdown files from markdown slice
   const documents = useMemo(() => {
@@ -57,8 +58,26 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
     return docItems;
   }, [context]);
 
+  // Filter documents based on search text
+  const filteredDocuments = useMemo(() => {
+    if (!filterText.trim()) {
+      return documents;
+    }
+
+    const searchLower = filterText.toLowerCase();
+    return documents.filter(
+      (doc) =>
+        doc.name.toLowerCase().includes(searchLower) ||
+        doc.relativePath.toLowerCase().includes(searchLower)
+    );
+  }, [documents, filterText]);
+
   const handleDocumentClick = (path: string) => {
     actions.openFile?.(path);
+  };
+
+  const handleClearFilter = () => {
+    setFilterText('');
   };
 
   // Check if markdown slice is loading
@@ -89,6 +108,7 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
+            marginBottom: '12px',
           }}
         >
           <Book size={16} color={theme.colors.primary} />
@@ -101,6 +121,75 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
           >
             {documents.length} {documents.length === 1 ? 'document' : 'documents'}
           </span>
+        </div>
+
+        {/* Filter Bar */}
+        <div
+          style={{
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <Search
+            size={16}
+            color={theme.colors.textSecondary}
+            style={{
+              position: 'absolute',
+              left: '10px',
+              pointerEvents: 'none',
+            }}
+          />
+          <input
+            type="text"
+            placeholder="Filter documents..."
+            value={filterText}
+            onChange={(e) => setFilterText(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '8px 32px 8px 32px',
+              fontSize: theme.fontSizes[1],
+              color: theme.colors.text,
+              backgroundColor: theme.colors.backgroundSecondary,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: '4px',
+              outline: 'none',
+              fontFamily: theme.fonts.body,
+              transition: 'border-color 0.2s ease',
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = theme.colors.primary;
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = theme.colors.border;
+            }}
+          />
+          {filterText && (
+            <button
+              onClick={handleClearFilter}
+              style={{
+                position: 'absolute',
+                right: '8px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: theme.colors.textSecondary,
+                transition: 'color 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = theme.colors.text;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = theme.colors.textSecondary;
+              }}
+            >
+              <X size={16} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -131,7 +220,7 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
               Loading documents...
             </span>
           </div>
-        ) : documents.length === 0 ? (
+        ) : filteredDocuments.length === 0 ? (
           <div
             style={{
               textAlign: 'center',
@@ -143,14 +232,18 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
             <div style={{ marginBottom: '8px', opacity: 0.5 }}>
               <FileText size={32} />
             </div>
-            <div style={{ marginBottom: '4px' }}>No documents found</div>
+            <div style={{ marginBottom: '4px' }}>
+              {filterText ? 'No matching documents' : 'No documents found'}
+            </div>
             <div style={{ fontSize: theme.fontSizes[0], opacity: 0.8 }}>
-              Markdown documents will appear here
+              {filterText
+                ? 'Try a different search term'
+                : 'Markdown documents will appear here'}
             </div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {documents.map((doc) => (
+            {filteredDocuments.map((doc) => (
               <AlexandriaDocItem
                 key={doc.path}
                 doc={doc}

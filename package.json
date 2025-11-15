@@ -1,6 +1,6 @@
 {
-  "name": "@principal-ade/alexandria-docs-panel",
-  "version": "0.1.1",
+  "name": "@industry-theme/alexandria-docs-panel",
+  "version": "0.1.2",
   "description": "Alexandria documentation panel for Principal ADE - view and manage repository documentation",
   "type": "module",
   "main": "dist/panels.bundle.js",
@@ -40,7 +40,7 @@
     }
   },
   "dependencies": {
-    "@a24z/industry-theme": "latest",
+    "@principal-ade/industry-theme": "latest",
     "clsx": "^2.1.1",
     "lucide-react": "^0.552.0"
   },
