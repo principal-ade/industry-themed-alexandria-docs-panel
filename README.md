@@ -32,6 +32,8 @@ import { panels } from '@principal-ade/alexandria-docs-panel';
 // No manual registration needed if your host scans packages
 ```
 
+**📖 See [INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md) for detailed setup instructions and troubleshooting.**
+
 ### Panel Requirements
 
 This panel requires the host application to provide:
