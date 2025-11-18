@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { FileText, ChevronRight, ChevronDown } from 'lucide-react';
 import type { AlexandriaDocItemData } from '../AlexandriaDocsPanel';
+import type { PanelEventEmitter } from '../../types';
 import { AssociatedFilesTree } from './AssociatedFilesTree';
 
 interface AlexandriaDocItemProps {
@@ -9,6 +10,7 @@ interface AlexandriaDocItemProps {
   onSelect: () => void;
   onFileSelect?: (filePath: string) => void;
   repositoryRoot?: string;
+  events?: PanelEventEmitter;
 }
 
 export const AlexandriaDocItem: React.FC<AlexandriaDocItemProps> = ({
@@ -16,6 +18,7 @@ export const AlexandriaDocItem: React.FC<AlexandriaDocItemProps> = ({
   onSelect,
   onFileSelect,
   repositoryRoot,
+  events,
 }) => {
   const { theme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -35,6 +38,36 @@ export const AlexandriaDocItem: React.FC<AlexandriaDocItemProps> = ({
     }
   };
 
+  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Update hover styling
+    e.currentTarget.style.backgroundColor = theme.colors.backgroundTertiary;
+
+    // Emit hover event with document data
+    if (events) {
+      events.emit({
+        type: 'doc:hover',
+        source: 'alexandria-docs-panel',
+        timestamp: Date.now(),
+        payload: doc,
+      });
+    }
+  };
+
+  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Reset hover styling
+    e.currentTarget.style.backgroundColor = 'transparent';
+
+    // Emit hover event with null payload to clear highlights
+    if (events) {
+      events.emit({
+        type: 'doc:hover',
+        source: 'alexandria-docs-panel',
+        timestamp: Date.now(),
+        payload: null,
+      });
+    }
+  };
+
   return (
     <div
       style={{
@@ -51,13 +84,8 @@ export const AlexandriaDocItem: React.FC<AlexandriaDocItemProps> = ({
           cursor: 'pointer',
           transition: 'all 0.2s ease',
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor =
-            theme.colors.backgroundTertiary;
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent';
-        }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
         <div
           style={{

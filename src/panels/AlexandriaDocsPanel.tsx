@@ -27,6 +27,7 @@ interface MarkdownFile {
 export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
   context,
   actions,
+  events,
 }) => {
   const { theme } = useTheme();
   const [filterText, setFilterText] = useState('');
@@ -271,6 +272,7 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
                 onSelect={() => handleDocumentClick(doc.path)}
                 onFileSelect={handleFileSelect}
                 repositoryRoot={repositoryPath}
+                events={events}
               />
             ))}
           </div>
