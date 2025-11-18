@@ -19,20 +19,23 @@ The alexandria-docs-panel is loading correctly (no type errors), but showing no 
 **Required Slice:** `markdown`
 
 The panel looks for this in `src/panels/AlexandriaDocsPanel.tsx:29`:
+
 ```typescript
 const markdownSlice = context.getSlice<MarkdownFile[]>('markdown');
 ```
 
 **Expected Data Structure:**
+
 ```typescript
 interface MarkdownFile {
-  path: string;           // Full file system path (e.g., "/repo/path/README.md")
-  title?: string;         // Optional document title (extracted from frontmatter or filename)
-  lastModified?: number;  // Unix timestamp in milliseconds
+  path: string; // Full file system path (e.g., "/repo/path/README.md")
+  title?: string; // Optional document title (extracted from frontmatter or filename)
+  lastModified?: number; // Unix timestamp in milliseconds
 }
 ```
 
 **Example markdown slice:**
+
 ```typescript
 {
   scope: 'repository',
@@ -64,11 +67,13 @@ The panel **does NOT discover documentation itself**. It relies entirely on the 
 3. Provide them via the `markdown` slice
 
 **What the panel does:**
+
 - Displays whatever markdown files are in the `markdown` slice
 - Sorts/filters them (currently just displays in order)
 - Opens them when clicked using `actions.openFile()`
 
 **What the host needs to do:**
+
 - Scan for `.md` and `.MD` files (recursively)
 - Extract title from frontmatter, first heading, or filename
 - Get lastModified timestamp
@@ -81,6 +86,7 @@ The panel **does NOT discover documentation itself**. It relies entirely on the 
 **Events the panel emits:** None currently
 
 **Future (Milestone 2):** May emit events for:
+
 - Document selection
 - Search/filter changes
 - View mode changes
@@ -88,10 +94,12 @@ The panel **does NOT discover documentation itself**. It relies entirely on the 
 ### 4. Configuration needed?
 
 **No configuration required.** The panel works entirely from:
+
 - The `markdown` slice data
 - The `actions.openFile()` callback
 
 **Optional configuration (future):**
+
 - Sort preferences
 - Filter settings
 - Display options
@@ -108,10 +116,10 @@ const repositoryPath = '/path/to/repo';
 const markdownFiles = scanFileTreeForMarkdown(fileTreeSlice.data);
 
 // 3. Extract metadata
-const markdownData: MarkdownFile[] = markdownFiles.map(file => ({
+const markdownData: MarkdownFile[] = markdownFiles.map((file) => ({
   path: file.path,
   title: extractTitle(file), // from frontmatter or first heading
-  lastModified: file.lastModified
+  lastModified: file.lastModified,
 }));
 
 // 4. Create markdown slice
@@ -125,7 +133,7 @@ const markdownSlice: DataSlice<MarkdownFile[]> = {
     // Re-scan file tree
     const updated = await scanFileTreeForMarkdown(fileTreeSlice.data);
     // Update slice
-  }
+  },
 };
 
 // 5. Add to context slices
@@ -142,7 +150,9 @@ Since you already have a `fileTree` slice, you can derive the `markdown` slice f
 
 ```typescript
 // In your PanelContext provider
-function createMarkdownSlice(fileTreeSlice: DataSlice<FileNode[]>): DataSlice<MarkdownFile[]> {
+function createMarkdownSlice(
+  fileTreeSlice: DataSlice<FileNode[]>
+): DataSlice<MarkdownFile[]> {
   if (!fileTreeSlice.data) {
     return {
       scope: 'repository',
@@ -244,7 +254,9 @@ function extractTitleFromPath(path: string): string {
 ### Helper: Extract Title from Content (Advanced)
 
 ```typescript
-async function extractTitleFromMarkdown(content: string): Promise<string | undefined> {
+async function extractTitleFromMarkdown(
+  content: string
+): Promise<string | undefined> {
   // Check for frontmatter title
   const frontmatterMatch = content.match(/^---\\s*\\ntitle:\\s*(.+)\\n/);
   if (frontmatterMatch) {
@@ -272,7 +284,11 @@ Here's a complete example of how to add the markdown slice to your PanelContext:
 
 import { useEffect, useMemo } from 'react';
 
-export function PanelContextProvider({ children }: { children: React.ReactNode }) {
+export function PanelContextProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const fileTreeSlice = useFileTreeSlice(); // your existing slice
   const gitSlice = useGitSlice(); // your existing slice
   const activeFileSlice = useActiveFileSlice(); // your existing slice
@@ -344,19 +360,21 @@ function extractMarkdownFiles(fileTree: FileNode[]): MarkdownFile[] {
 ### 1. Verify the slice is available
 
 In your browser console:
+
 ```javascript
 // Check if markdown slice exists
-window.__PANEL_CONTEXT__.slices.has('markdown')
+window.__PANEL_CONTEXT__.slices.has('markdown');
 // Should return: true
 
 // Check markdown data
-window.__PANEL_CONTEXT__.getSlice('markdown').data
+window.__PANEL_CONTEXT__.getSlice('markdown').data;
 // Should return: array of MarkdownFile objects
 ```
 
 ### 2. Expected behavior
 
 Once the `markdown` slice is populated:
+
 - Panel header should show document count (e.g., "5 documents")
 - List of documents should appear
 - Clicking a document should call `actions.openFile(path)`
@@ -365,15 +383,18 @@ Once the `markdown` slice is populated:
 ### 3. Common issues
 
 **Panel shows "0 documents":**
+
 - Check if `markdownSlice.data` is an empty array
 - Verify file tree is being scanned correctly
 - Check if markdown files exist in the repository
 
 **Panel shows loading forever:**
+
 - Check if `markdownSlice.loading` is stuck at `true`
 - Verify file tree slice is finishing its load
 
 **Panel crashes:**
+
 - Check browser console for errors
 - Verify `markdownSlice.data` is an array (not null/undefined)
 - Check that each item has a `path` property

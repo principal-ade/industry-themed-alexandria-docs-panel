@@ -25,7 +25,8 @@ export const panels: PanelDefinition[] = [
       console.log(
         '[Alexandria] Panel mounted:',
         context.currentScope.type,
-        context.currentScope.repository?.path || context.currentScope.workspace?.path
+        context.currentScope.repository?.path ||
+          context.currentScope.workspace?.path
       );
     },
 

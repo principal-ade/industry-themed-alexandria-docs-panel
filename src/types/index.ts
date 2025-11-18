@@ -17,3 +17,19 @@ export type {
   RepositoryMetadata,
   ActiveFileSlice,
 } from '@principal-ade/panel-framework-core';
+
+/**
+ * Extended markdown file interface with Alexandria-specific metadata
+ * Supports associated files from CodebaseView
+ */
+export interface ExtendedMarkdownFile {
+  path: string;
+  title?: string;
+  lastModified?: number;
+
+  // Alexandria-specific fields (optional for backwards compatibility)
+  isTracked?: boolean;
+  associatedFiles?: string[];
+  hasUncommittedChanges?: boolean;
+  codebaseViewId?: string;
+}

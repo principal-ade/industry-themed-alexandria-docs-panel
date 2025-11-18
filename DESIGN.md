@@ -14,6 +14,7 @@ This document outlines the design for converting the built-in Alexandria Docs Pa
 The project is divided into **two milestones** to enable iterative delivery and validation.
 
 ### Milestone 1 Goals (MVP - Current)
+
 - Create a simple, portable documentation list panel
 - Display markdown documents from the repository
 - Support click-to-open functionality
@@ -21,6 +22,7 @@ The project is divided into **two milestones** to enable iterative delivery and 
 - Use `@a24z/industry-theme` for consistent styling
 
 ### Milestone 2 Goals (Future)
+
 - Add search and filtering capabilities
 - Add associated files tree view (CodebaseView integration)
 - Implement map/visualization integration via events
@@ -29,6 +31,7 @@ The project is divided into **two milestones** to enable iterative delivery and 
 - Advanced metadata features
 
 ### Non-Goals (Both Milestones)
+
 - Full-text search (beyond file name/path matching)
 - Document editing capabilities
 - Document creation wizards
@@ -41,11 +44,13 @@ The project is divided into **two milestones** to enable iterative delivery and 
 ### 2.1 Source Codebases
 
 **Reference Implementation**:
+
 - Location: `/Users/griever/Developer/desktop-app/electron-app/src/renderer/repo-manager/shared/AlexandriaDocsPanel.tsx`
 - Type: Built-in Electron panel with tight IPC integration
 - Dependencies: Electron IPC, AlexandriaDocsService, Code City integration
 
 **Target Template**:
+
 - Location: `/Users/griever/Developer/industry-themed-panel-starter`
 - Type: Standalone panel extension starter
 - Architecture: NPM package with panel framework integration
@@ -106,19 +111,20 @@ interface MarkdownDataSlice {
 }
 
 interface AlexandriaDocument {
-  path: string;              // Full file system path
-  name: string;              // Display name (without .md)
-  relativePath: string;      // Relative to repo root
-  isTracked: boolean;        // In a CodebaseView?
-  mtime?: Date;              // Last modification time
-  files?: string[];          // Associated files from CodebaseView
-  hasUncommittedChanges?: boolean;  // Git status indicator
+  path: string; // Full file system path
+  name: string; // Display name (without .md)
+  relativePath: string; // Relative to repo root
+  isTracked: boolean; // In a CodebaseView?
+  mtime?: Date; // Last modification time
+  files?: string[]; // Associated files from CodebaseView
+  hasUncommittedChanges?: boolean; // Git status indicator
 }
 ```
 
 #### Fallback Strategy
 
 If the host doesn't provide Alexandria-specific data, the panel will:
+
 1. Use the basic `markdown` slice (list of markdown files)
 2. Display all markdown files as "untracked"
 3. Disable CodebaseView-specific features (associated files, coverage view)
@@ -127,6 +133,7 @@ If the host doesn't provide Alexandria-specific data, the panel will:
 ### 3.2 Additional Data Needs
 
 The panel may also consume:
+
 - **`git`** slice - For showing uncommitted changes on associated files
 - **`fileTree`** slice - For building associated file trees
 
@@ -301,27 +308,27 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
 
 ### 6.1 Milestone 1 Features (MVP)
 
-| Feature | Implementation Notes |
-|---------|---------------------|
-| Document List Display | Use `context.markdownFiles` |
-| Click to Open Document | `actions.openFile(path)` |
-| Real-time Updates | Auto-updates via context changes |
-| Basic Styling | Use `@a24z/industry-theme` |
+| Feature                | Implementation Notes             |
+| ---------------------- | -------------------------------- |
+| Document List Display  | Use `context.markdownFiles`      |
+| Click to Open Document | `actions.openFile(path)`         |
+| Real-time Updates      | Auto-updates via context changes |
+| Basic Styling          | Use `@a24z/industry-theme`       |
 
 ### 6.2 Milestone 2 Features (Future)
 
-| Feature | Implementation Notes |
-|---------|---------------------|
-| Search by Name/Path | Local filtering logic |
-| Filter: All vs Tracked | Requires Alexandria metadata |
-| Sort: Recent vs Alpha | Use file mtime from context |
-| Visual Status Indicators | Green (tracked), Yellow (untracked) |
-| Associated Files Tree | Requires CodebaseView data in slice |
-| Git Status Indicators | Requires `git` data slice |
-| Map Highlighting (Selection) | Emit events for Code City panel |
-| Map Highlighting (Hover) | Emit hover events |
-| Coverage View | Emit coverage toggle events |
-| Tracked Badge Click | Requires associated files data |
+| Feature                      | Implementation Notes                |
+| ---------------------------- | ----------------------------------- |
+| Search by Name/Path          | Local filtering logic               |
+| Filter: All vs Tracked       | Requires Alexandria metadata        |
+| Sort: Recent vs Alpha        | Use file mtime from context         |
+| Visual Status Indicators     | Green (tracked), Yellow (untracked) |
+| Associated Files Tree        | Requires CodebaseView data in slice |
+| Git Status Indicators        | Requires `git` data slice           |
+| Map Highlighting (Selection) | Emit events for Code City panel     |
+| Map Highlighting (Hover)     | Emit hover events                   |
+| Coverage View                | Emit coverage toggle events         |
+| Tracked Badge Click          | Requires associated files data      |
 
 ### 6.3 Nice-to-Have Features (Post-Milestone 2)
 
@@ -348,15 +355,19 @@ export const panels: PanelDefinition[] = [
   {
     id: 'principal-ade.alexandria-docs',
     name: 'Alexandria Docs',
-    icon: '📚',  // or URL to custom icon
+    icon: '📚', // or URL to custom icon
     version: '1.0.0',
     author: 'Principal AI',
-    description: 'View and manage repository documentation with Alexandria integration',
+    description:
+      'View and manage repository documentation with Alexandria integration',
     component: AlexandriaDocsPanel,
 
     // Lifecycle hooks
     onMount: async (context) => {
-      console.log('[Alexandria] Panel mounted for repo:', context.repositoryPath);
+      console.log(
+        '[Alexandria] Panel mounted for repo:',
+        context.repositoryPath
+      );
     },
 
     onUnmount: async (context) => {
@@ -455,23 +466,27 @@ import './AlexandriaDocsPanel.css';
 ### Milestone 1 (MVP) - Current Focus
 
 **Phase 1: Project Setup**
+
 1. Set up project from panel starter template
 2. Install `@a24z/industry-theme` dependency
 3. Configure build and development tools
 
 **Phase 2: Core Implementation**
+
 1. Create `AlexandriaDocsPanel` component
 2. Create `AlexandriaDocItem` component
 3. Implement `useAlexandriaDocuments` hook
 4. Add basic styling with industry theme
 
 **Phase 3: Testing & Polish**
+
 1. Create Storybook stories (empty, with docs, loading states)
 2. Test with mock data
 3. Implement error states
 4. Add documentation
 
 **Phase 4: Distribution**
+
 1. Build and test locally
 2. Publish to NPM (v0.1.0)
 3. Integration testing with host application
@@ -480,18 +495,21 @@ import './AlexandriaDocsPanel.css';
 ### Milestone 2 (Future) - Deferred Features
 
 **Phase 5: Enhanced Features**
+
 1. Add search and filtering UI
 2. Implement sorting (recent/alphabetical)
 3. Add status indicators (tracked/untracked)
 4. Test advanced scenarios
 
 **Phase 6: Advanced Integration**
+
 1. Implement associated files tree
 2. Add git status indicators
 3. Implement map event emission
 4. Test event-driven map integration
 
 **Phase 7: Final Polish**
+
 1. Performance optimization
 2. Comprehensive testing
 3. Full documentation
@@ -502,6 +520,7 @@ import './AlexandriaDocsPanel.css';
 ## 10. Dependencies
 
 ### 10.1 Peer Dependencies (Provided by Host)
+
 ```json
 {
   "react": "^19.0.0",
@@ -510,18 +529,20 @@ import './AlexandriaDocsPanel.css';
 ```
 
 ### 10.2 Direct Dependencies (Bundled)
+
 ```json
 {
-  "@a24z/industry-theme": "latest",  // Styling and theming
-  "lucide-react": "^0.552.0",        // Icons
-  "clsx": "^2.1.1"                   // Conditional classNames
+  "@a24z/industry-theme": "latest", // Styling and theming
+  "lucide-react": "^0.552.0", // Icons
+  "clsx": "^2.1.1" // Conditional classNames
 }
 ```
 
 ### 10.3 Dev Dependencies
+
 ```json
 {
-  "@principal-ade/panel-framework-core": "latest",  // Type definitions
+  "@principal-ade/panel-framework-core": "latest", // Type definitions
   "@vitejs/plugin-react": "^4.0.0",
   "vite": "^6.0.7",
   "typescript": "^5.0.4",
@@ -610,11 +631,13 @@ export const mockAlexandriaDocuments: AlexandriaDocument[] = [
 ## 12. Decisions Made
 
 ### 12.1 Theme Strategy ✅
+
 **Decision**: Use `@a24z/industry-theme` as a dependency
 
 The panel will depend on `@a24z/industry-theme` and bundle it into the output. This ensures visual consistency and simplifies development.
 
 ### 12.2 Milestone Approach ✅
+
 **Decision**: Two-milestone delivery
 
 - **Milestone 1**: Simple list with click-to-open (current focus)
@@ -629,9 +652,11 @@ This allows for faster iteration and early validation.
 These questions are deferred to Milestone 2:
 
 ### 13.1 Data Slice Provisioning
+
 **Question**: Will the host application provide Alexandria-specific data in the markdown slice?
 
 **Options**:
+
 - A) Host provides full Alexandria metadata (tracked/untracked status, associated files)
 - B) Panel only receives basic markdown files
 - C) Panel makes additional API calls to Alexandria registry
@@ -639,9 +664,11 @@ These questions are deferred to Milestone 2:
 **Recommendation**: Option A - Extend markdown slice with Alexandria metadata
 
 ### 13.2 Map Integration Approach
+
 **Question**: How should the panel integrate with Code City visualization?
 
 **Options**:
+
 - A) Custom action: `actions.highlightFilesOnMap(files, config)`
 - B) Event-based: Panel emits events, Code City panel subscribes
 - C) Shared context: Both panels access highlight state from context
@@ -653,6 +680,7 @@ These questions are deferred to Milestone 2:
 ## 14. Success Criteria
 
 ### 14.1 Milestone 1 (MVP) - Functional Requirements
+
 - ✅ Displays all markdown documents in repository
 - ✅ Click to open documents
 - ✅ Refreshes automatically on data changes
@@ -660,18 +688,21 @@ These questions are deferred to Milestone 2:
 - ✅ Uses industry theme for styling
 
 ### 14.2 Milestone 1 (MVP) - Non-Functional Requirements
+
 - Bundle size < 150KB (excluding React, including industry theme)
 - Loads in < 100ms on typical repository
 - Smooth scrolling with 500+ documents
 - Basic accessibility (semantic HTML, keyboard navigation)
 
 ### 14.3 Milestone 1 (MVP) - Developer Experience
+
 - Complete TypeScript types
 - Basic Storybook stories (empty, with docs)
 - README with installation and usage
 - Published to NPM as v0.1.0
 
 ### 14.4 Milestone 2 - Additional Requirements
+
 - Search by document name or path
 - Filter tracked/untracked documents
 - Sort by recent edit or alphabetically
@@ -689,29 +720,29 @@ These questions are deferred to Milestone 2:
 
 ### Milestone 1 (MVP)
 
-| Phase | Tasks | Estimated Time |
-|-------|-------|----------------|
-| Project Setup | Initialize from template, install dependencies | 1-2 hours |
-| Core Components | Panel, DocItem components | 3-4 hours |
-| Data Hook | Extract markdown from context | 1-2 hours |
-| Styling | Industry theme integration, basic CSS | 2-3 hours |
-| Testing | Storybook stories, edge cases | 2-3 hours |
-| Documentation | README, basic usage docs | 1-2 hours |
-| **Milestone 1 Total** | | **10-16 hours** |
+| Phase                 | Tasks                                          | Estimated Time  |
+| --------------------- | ---------------------------------------------- | --------------- |
+| Project Setup         | Initialize from template, install dependencies | 1-2 hours       |
+| Core Components       | Panel, DocItem components                      | 3-4 hours       |
+| Data Hook             | Extract markdown from context                  | 1-2 hours       |
+| Styling               | Industry theme integration, basic CSS          | 2-3 hours       |
+| Testing               | Storybook stories, edge cases                  | 2-3 hours       |
+| Documentation         | README, basic usage docs                       | 1-2 hours       |
+| **Milestone 1 Total** |                                                | **10-16 hours** |
 
 ### Milestone 2 (Future)
 
-| Phase | Tasks | Estimated Time |
-|-------|-------|----------------|
-| Search & Filter | UI components, logic | 4-6 hours |
-| Sorting | Implementation and UI | 2-3 hours |
-| Status Indicators | Tracked/untracked badges | 2-3 hours |
-| File Tree | Associated files component | 4-6 hours |
-| Git Integration | Status indicators | 2-3 hours |
-| Map Events | Event emission logic | 3-4 hours |
-| Testing | Advanced scenarios | 3-4 hours |
-| Documentation | Full API docs | 2-3 hours |
-| **Milestone 2 Total** | | **22-32 hours** |
+| Phase                 | Tasks                      | Estimated Time  |
+| --------------------- | -------------------------- | --------------- |
+| Search & Filter       | UI components, logic       | 4-6 hours       |
+| Sorting               | Implementation and UI      | 2-3 hours       |
+| Status Indicators     | Tracked/untracked badges   | 2-3 hours       |
+| File Tree             | Associated files component | 4-6 hours       |
+| Git Integration       | Status indicators          | 2-3 hours       |
+| Map Events            | Event emission logic       | 3-4 hours       |
+| Testing               | Advanced scenarios         | 3-4 hours       |
+| Documentation         | Full API docs              | 2-3 hours       |
+| **Milestone 2 Total** |                            | **22-32 hours** |
 
 ### Combined Total: 32-48 hours
 
@@ -719,19 +750,20 @@ These questions are deferred to Milestone 2:
 
 ## 16. Risks & Mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| Host doesn't provide Alexandria metadata | High | Implement fallback mode with basic markdown list |
-| Map integration events not subscribed | Medium | Document event contract, provide sample Code City integration |
-| Bundle size too large | Low | Tree-shake dependencies, lazy load components |
-| Performance with many documents | Medium | Implement virtual scrolling if needed |
-| Theme inconsistency | Low | Use CSS variables for customization |
+| Risk                                     | Impact | Mitigation                                                    |
+| ---------------------------------------- | ------ | ------------------------------------------------------------- |
+| Host doesn't provide Alexandria metadata | High   | Implement fallback mode with basic markdown list              |
+| Map integration events not subscribed    | Medium | Document event contract, provide sample Code City integration |
+| Bundle size too large                    | Low    | Tree-shake dependencies, lazy load components                 |
+| Performance with many documents          | Medium | Implement virtual scrolling if needed                         |
+| Theme inconsistency                      | Low    | Use CSS variables for customization                           |
 
 ---
 
 ## 17. Future Enhancements (Post-Milestone 2)
 
 ### Post-V1 Features
+
 1. **Document Creation Wizard**
    - Templates for common doc types
    - Auto-populate with repository context
@@ -765,17 +797,20 @@ This design provides a comprehensive roadmap for converting the Alexandria Docs 
 ### Key Takeaways:
 
 **Architecture:**
+
 - **Data-driven**: Panel relies on host-provided data slices
 - **Portable**: NPM package, easy to integrate into any panel-framework host
 - **Themed**: Uses `@a24z/industry-theme` for consistent styling
 
 **Milestone 1 (MVP):**
+
 - Simple list of markdown documents
 - Click to open functionality
 - Industry theme styling
 - **Estimated effort**: 10-16 hours
 
 **Milestone 2 (Future):**
+
 - Search, filter, and sorting
 - Associated files tree
 - Map integration via events
@@ -783,6 +818,7 @@ This design provides a comprehensive roadmap for converting the Alexandria Docs 
 - **Estimated effort**: 22-32 hours
 
 ### Next Steps for Milestone 1:
+
 1. ✅ Review and approve this design
 2. Set up project from panel starter template
 3. Install `@a24z/industry-theme` dependency

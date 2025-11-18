@@ -9,12 +9,19 @@ export interface AlexandriaDocItemData {
   name: string;
   relativePath: string;
   mtime?: Date;
+  associatedFiles?: string[];
+  isTracked?: boolean;
+  hasUncommittedChanges?: boolean;
 }
 
 interface MarkdownFile {
   path: string;
   title?: string;
   lastModified?: number;
+  // Extended Alexandria fields (optional)
+  associatedFiles?: string[];
+  isTracked?: boolean;
+  hasUncommittedChanges?: boolean;
 }
 
 export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
@@ -52,11 +59,20 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
           ? file.path.replace(repositoryPath + '/', '')
           : file.path,
         mtime: file.lastModified ? new Date(file.lastModified) : undefined,
+        associatedFiles: file.associatedFiles,
+        isTracked: file.isTracked,
+        hasUncommittedChanges: file.hasUncommittedChanges,
       };
     });
 
     return docItems;
   }, [context]);
+
+  // Get repository path for file tree
+  const repositoryPath =
+    context.currentScope.repository?.path ||
+    context.currentScope.workspace?.path ||
+    '';
 
   // Filter documents based on search text
   const filteredDocuments = useMemo(() => {
@@ -74,6 +90,10 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
 
   const handleDocumentClick = (path: string) => {
     actions.openFile?.(path);
+  };
+
+  const handleFileSelect = (filePath: string) => {
+    actions.openFile?.(filePath);
   };
 
   const handleClearFilter = () => {
@@ -119,7 +139,8 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
               fontWeight: theme.fontWeights.medium,
             }}
           >
-            {documents.length} {documents.length === 1 ? 'document' : 'documents'}
+            {documents.length}{' '}
+            {documents.length === 1 ? 'document' : 'documents'}
           </span>
         </div>
 
@@ -248,6 +269,8 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
                 key={doc.path}
                 doc={doc}
                 onSelect={() => handleDocumentClick(doc.path)}
+                onFileSelect={handleFileSelect}
+                repositoryRoot={repositoryPath}
               />
             ))}
           </div>

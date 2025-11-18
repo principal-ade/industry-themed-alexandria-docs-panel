@@ -7,6 +7,9 @@ interface MarkdownFile {
   path: string;
   title?: string;
   lastModified?: number;
+  associatedFiles?: string[];
+  isTracked?: boolean;
+  hasUncommittedChanges?: boolean;
 }
 
 // Mock panel context
@@ -147,7 +150,57 @@ export const WithDocuments: Story = {
   },
 };
 
-// Story 4: Many documents
+// Story 4: With Associated Files
+export const WithAssociatedFiles: Story = {
+  args: {
+    context: createMockContext([
+      {
+        path: '/mock/repository/docs/architecture.md',
+        title: 'Architecture Overview',
+        lastModified: new Date('2025-11-10').getTime(),
+        isTracked: true,
+        associatedFiles: [
+          '/mock/repository/src/core/app.ts',
+          '/mock/repository/src/core/config.ts',
+          '/mock/repository/src/core/types.ts',
+          '/mock/repository/src/services/api.ts',
+          '/mock/repository/src/services/database.ts',
+        ],
+      },
+      {
+        path: '/mock/repository/docs/api/endpoints.md',
+        title: 'API Endpoints',
+        lastModified: new Date('2025-11-08').getTime(),
+        isTracked: true,
+        associatedFiles: [
+          '/mock/repository/src/api/routes.ts',
+          '/mock/repository/src/api/handlers/users.ts',
+          '/mock/repository/src/api/handlers/auth.ts',
+        ],
+      },
+      {
+        path: '/mock/repository/README.md',
+        lastModified: new Date('2025-11-14').getTime(),
+        isTracked: false,
+      },
+      {
+        path: '/mock/repository/docs/database-schema.md',
+        title: 'Database Schema',
+        lastModified: new Date('2025-11-07').getTime(),
+        isTracked: true,
+        hasUncommittedChanges: true,
+        associatedFiles: [
+          '/mock/repository/src/database/schema.sql',
+          '/mock/repository/src/database/migrations/001_initial.sql',
+        ],
+      },
+    ]),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
+};
+
+// Story 5: Many documents
 export const ManyDocuments: Story = {
   args: {
     context: createMockContext(
@@ -155,7 +208,15 @@ export const ManyDocuments: Story = {
         path: `/mock/repository/docs/section-${Math.floor(i / 10)}/doc-${i}.md`,
         title: `Document ${i}`,
         lastModified: new Date(2025, 10, 14 - i).getTime(),
-      })),
+        isTracked: i % 3 === 0,
+        associatedFiles:
+          i % 3 === 0
+            ? [
+                `/mock/repository/src/components/component-${i}.tsx`,
+                `/mock/repository/src/utils/util-${i}.ts`,
+              ]
+            : undefined,
+      }))
     ),
     actions: createMockActions(),
     events: createMockEvents(),

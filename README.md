@@ -2,7 +2,9 @@
 
 A panel extension for viewing and managing repository documentation in Principal ADE applications.
 
-## Features (Milestone 1 - MVP)
+## Features
+
+### Milestone 1 (MVP) - Complete ✅
 
 - ✅ Display list of markdown documents from repository
 - ✅ Click to open documents
@@ -10,6 +12,16 @@ A panel extension for viewing and managing repository documentation in Principal
 - ✅ Empty state handling
 - ✅ Loading state
 - ✅ Industry theme styling
+- ✅ Search and filtering
+
+### Milestone 2 (In Progress) 🚧
+
+- ✅ **Associated Files Tree View** - Expandable tree showing files linked to each document
+- 🔲 Sort by name/date
+- 🔲 Track/untracked status indicators
+- 🔲 Git status indicators
+- 🔲 Map/visualization integration
+- 🔲 Coverage view
 
 ## Installation
 
@@ -45,11 +57,18 @@ This panel requires the host application to provide:
 
 ```typescript
 interface MarkdownFile {
-  path: string;           // Full file system path
-  title?: string;         // Optional document title
-  lastModified: number;   // Unix timestamp
+  path: string; // Full file system path
+  title?: string; // Optional document title
+  lastModified: number; // Unix timestamp
+
+  // Optional: Alexandria-specific metadata (Milestone 2)
+  associatedFiles?: string[]; // Array of file paths linked to this document
+  isTracked?: boolean; // Whether document is tracked by Alexandria
+  hasUncommittedChanges?: boolean; // Git status indicator
 }
 ```
+
+**Note**: The `associatedFiles` feature allows documents to display an expandable tree view of related source files. This is useful for CodebaseView integration where documentation is linked to specific code files.
 
 ## Development
 
@@ -91,6 +110,7 @@ This will open http://localhost:6006 with interactive stories:
 - **Empty State** - No documents
 - **Loading State** - Data loading
 - **With Documents** - 5 example documents
+- **With Associated Files** - Documents with expandable file trees
 - **Many Documents** - 50 documents for scroll testing
 
 ## Architecture
@@ -103,7 +123,8 @@ src/
 │   ├── AlexandriaDocsPanel.tsx           # Main panel component
 │   ├── AlexandriaDocsPanel.stories.tsx   # Storybook stories
 │   └── components/
-│       └── AlexandriaDocItem.tsx         # Individual doc item
+│       ├── AlexandriaDocItem.tsx         # Individual doc item with expand/collapse
+│       └── AssociatedFilesTree.tsx       # File tree view for associated files
 ├── types/
 │   └── index.ts                          # TypeScript types
 └── index.tsx                             # Panel registration
@@ -125,26 +146,34 @@ src/
 
 ## Roadmap
 
-### Milestone 2 (Future)
+### Milestone 2 (In Progress)
 
-- Search and filtering
-- Sort by name/date
-- Track/untracked status indicators
-- Associated files tree view
-- Map/visualization integration
-- Git status indicators
-- Coverage view
+- ✅ Associated files tree view
+- 🚧 Sort by name/date
+- 🚧 Track/untracked status indicators
+- 🚧 Git status indicators
+- 🚧 Map/visualization integration
+- 🚧 Coverage view
+
+### Future Enhancements
+
+- Document creation UI
+- Full-text search
+- Batch operations
+- Document templates
 
 ## Bundle Size
 
-- Bundle: ~20KB (gzipped: ~6KB)
-- Well under the 150KB target
+- Bundle: ~283KB (gzipped: ~55KB)
+- Includes dynamic file tree library for associated files feature
 
 ## Dependencies
 
 ### Runtime
 
-- `@a24z/industry-theme` - Theming and styling
+- `@principal-ade/industry-theme` - Theming and styling
+- `@principal-ade/dynamic-file-tree` - File tree visualization component
+- `@principal-ai/repository-abstraction` - File tree data structures
 - `lucide-react` - Icon library
 - `clsx` - Conditional className utility
 
@@ -163,5 +192,27 @@ See [DESIGN.md](./DESIGN.md) for the full design document and architecture detai
 
 ---
 
-**Version**: 0.1.0 (Milestone 1 - MVP)
+**Version**: 0.2.0 (Milestone 2 - In Progress)
 **Author**: Principal AI
+
+## Changelog
+
+### v0.2.0 (2025-11-18)
+
+- ✨ Added associated files tree view with expand/collapse functionality
+- ✨ Integrated `@principal-ade/dynamic-file-tree` for file tree visualization
+- 🔧 Extended MarkdownFile interface to support Alexandria metadata
+- 📚 Updated Storybook with "With Associated Files" story
+- 📝 Updated documentation
+
+### v0.1.3 (2025-11-15)
+
+- ✨ Added filter bar for searching documents
+- 🐛 Fixed production JSX runtime issue
+
+### v0.1.0 (2025-11-14)
+
+- 🎉 Initial MVP release
+- ✨ Basic document list display
+- ✨ Click to open functionality
+- ✨ Industry theme styling
