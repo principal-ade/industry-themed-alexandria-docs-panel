@@ -33,10 +33,9 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
   const [filterText, setFilterText] = useState('');
 
   // Extract markdown files from markdown slice
-  const documents = useMemo(() => {
-    // Get the markdown slice
-    const markdownSlice = context.getSlice<MarkdownFile[]>('markdown');
+  const markdownSlice = context.getSlice<MarkdownFile[]>('markdown');
 
+  const documents = useMemo(() => {
     // If no slice or still loading, return empty array
     if (!markdownSlice || markdownSlice.loading || !markdownSlice.data) {
       return [];
@@ -67,7 +66,7 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
     });
 
     return docItems;
-  }, [context]);
+  }, [markdownSlice, context.currentScope]);
 
   // Get repository path for file tree
   const repositoryPath =
