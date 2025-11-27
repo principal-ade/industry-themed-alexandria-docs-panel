@@ -48,7 +48,15 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
       '';
 
     // Convert markdown files to our document format
-    const docItems: AlexandriaDocItemData[] = markdownSlice.data.map((file) => {
+    // Filter out files in .palace-work or .backlog directories
+    const docItems: AlexandriaDocItemData[] = markdownSlice.data
+      .filter((file) => {
+        return (
+          !file.path.includes('/.palace-work/') &&
+          !file.path.includes('/.backlog/')
+        );
+      })
+      .map((file) => {
       const fileName = file.path.split('/').pop() || file.path;
       const name = file.title || fileName.replace(/\.(md|MD)$/i, '');
 
