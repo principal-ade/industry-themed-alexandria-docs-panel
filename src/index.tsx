@@ -1,5 +1,6 @@
 import { AlexandriaDocsPanel } from './panels/AlexandriaDocsPanel';
 import type { PanelDefinition, PanelContextValue } from './types';
+import { alexandriaDocsPanelTools, alexandriaDocsPanelToolsMetadata } from './tools';
 
 /**
  * Export array of panel definitions.
@@ -16,6 +17,8 @@ export const panels: PanelDefinition[] = [
       description: 'View and manage repository documentation with Alexandria',
       surfaces: ['manager', 'agent'],
       slices: ['markdown'],
+      // UTCP-compatible tools this panel exposes
+      tools: alexandriaDocsPanelTools,
     },
     component: AlexandriaDocsPanel,
 
@@ -55,3 +58,15 @@ export const onPackageUnload = async () => {
   // eslint-disable-next-line no-console
   console.log('[Alexandria] Panel package unloading');
 };
+
+/**
+ * Export tools for server-safe imports.
+ * Use '@industry-theme/alexandria-docs-panel/tools' to import without React dependencies.
+ */
+export {
+  alexandriaDocsPanelTools,
+  alexandriaDocsPanelToolsMetadata,
+  openDocumentTool,
+  refreshDocumentsTool,
+  showAssociatedFilesTool,
+} from './tools';

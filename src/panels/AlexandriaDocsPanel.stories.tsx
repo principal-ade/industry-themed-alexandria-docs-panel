@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider } from '@principal-ade/industry-theme';
 import { AlexandriaDocsPanel } from './AlexandriaDocsPanel';
 import type { PanelComponentProps, DataSlice } from '../types';
