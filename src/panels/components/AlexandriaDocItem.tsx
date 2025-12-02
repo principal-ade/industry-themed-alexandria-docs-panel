@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
-import { FileText, ChevronRight, ChevronDown } from 'lucide-react';
-import type { AlexandriaDocItemData } from '../AlexandriaDocsPanel';
+import { FileText, FileCode, ChevronRight } from 'lucide-react';
+import type { AlexandriaDocItemData } from './types';
 import type { PanelEventEmitter } from '../../types';
 import { AssociatedFilesTree } from './AssociatedFilesTree';
 
@@ -94,43 +94,43 @@ export const AlexandriaDocItem: React.FC<AlexandriaDocItemProps> = ({
             gap: '12px',
           }}
         >
-          {/* Expand/collapse button (only if has associated files) */}
-          {hasAssociatedFiles && (
-            <div
-              data-expand-button
-              onClick={handleToggleExpand}
-              style={{
-                flexShrink: 0,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '2px',
-                transition: 'color 0.2s ease',
-                color: theme.colors.textSecondary,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = theme.colors.text;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = theme.colors.textSecondary;
-              }}
-            >
-              {isExpanded ? (
-                <ChevronDown size={16} />
-              ) : (
-                <ChevronRight size={16} />
-              )}
-            </div>
-          )}
-
-          {/* File icon */}
+          {/* File icon - FileCode for linked docs (clickable), FileText for unlinked */}
           <div
+            data-expand-button
+            onClick={hasAssociatedFiles ? handleToggleExpand : undefined}
             style={{
               flexShrink: 0,
+              position: 'relative',
+              cursor: hasAssociatedFiles ? 'pointer' : 'default',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}
           >
-            <FileText size={20} color={theme.colors.textSecondary} />
+            {hasAssociatedFiles ? (
+              <>
+                <FileCode size={20} color={theme.colors.primary} />
+                {/* Small chevron decorator */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: -2,
+                    right: -4,
+                    backgroundColor: theme.colors.backgroundLight,
+                    borderRadius: '2px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'transform 0.2s ease',
+                    transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                  }}
+                >
+                  <ChevronRight size={10} color={theme.colors.primary} />
+                </div>
+              </>
+            ) : (
+              <FileText size={20} color={theme.colors.textSecondary} />
+            )}
           </div>
 
           {/* Document info */}
@@ -169,19 +169,11 @@ export const AlexandriaDocItem: React.FC<AlexandriaDocItemProps> = ({
 
       {/* Associated files tree (expanded) */}
       {isExpanded && hasAssociatedFiles && doc.associatedFiles && (
-        <div
-          style={{
-            paddingLeft: '48px',
-            paddingRight: '20px',
-            paddingBottom: '12px',
-          }}
-        >
-          <AssociatedFilesTree
-            filePaths={doc.associatedFiles}
-            onFileSelect={onFileSelect}
-            repositoryRoot={repositoryRoot}
-          />
-        </div>
+        <AssociatedFilesTree
+          filePaths={doc.associatedFiles}
+          onFileSelect={onFileSelect}
+          repositoryRoot={repositoryRoot}
+        />
       )}
     </div>
   );

@@ -1,6 +1,6 @@
 import { AlexandriaDocsPanel } from './panels/AlexandriaDocsPanel';
 import type { PanelDefinition, PanelContextValue } from './types';
-import { alexandriaDocsPanelTools, alexandriaDocsPanelToolsMetadata } from './tools';
+import { alexandriaDocsPanelTools } from './tools';
 
 /**
  * Export array of panel definitions.

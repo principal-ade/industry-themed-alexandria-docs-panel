@@ -1,28 +1,18 @@
 import React, { useMemo, useState } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
-import { Book, FileText, Loader, Search, X } from 'lucide-react';
 import type { PanelComponentProps } from '../types';
-import { AlexandriaDocItem } from './components/AlexandriaDocItem';
+import type {
+  AlexandriaDocItemData,
+  MarkdownFile,
+  AlexandriaConfigSlice,
+} from './components/types';
+import { PanelHeader } from './components/PanelHeader';
+import { DocumentList } from './components/DocumentList';
+import { LoadingSkeleton } from './components/LoadingSkeleton';
+import { EmptyState } from './components/EmptyState';
 
-export interface AlexandriaDocItemData {
-  path: string;
-  name: string;
-  relativePath: string;
-  mtime?: Date;
-  associatedFiles?: string[];
-  isTracked?: boolean;
-  hasUncommittedChanges?: boolean;
-}
-
-interface MarkdownFile {
-  path: string;
-  title?: string;
-  lastModified?: number;
-  // Extended Alexandria fields (optional)
-  associatedFiles?: string[];
-  isTracked?: boolean;
-  hasUncommittedChanges?: boolean;
-}
+// Re-export types for external use
+export type { AlexandriaDocItemData } from './components/types';
 
 export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
   context,
@@ -31,9 +21,15 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
 }) => {
   const { theme } = useTheme();
   const [filterText, setFilterText] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [showTrackedOnly, setShowTrackedOnly] = useState(false);
 
   // Extract markdown files from markdown slice
   const markdownSlice = context.getSlice<MarkdownFile[]>('markdown');
+
+  // Check for Alexandria config
+  const alexandriaSlice = context.getSlice<AlexandriaConfigSlice>('alexandria');
+  const hasAlexandriaConfig = alexandriaSlice?.data?.hasConfig ?? false;
 
   const documents = useMemo(() => {
     // If no slice or still loading, return empty array
@@ -57,21 +53,21 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
         );
       })
       .map((file) => {
-      const fileName = file.path.split('/').pop() || file.path;
-      const name = file.title || fileName.replace(/\.(md|MD)$/i, '');
+        const fileName = file.path.split('/').pop() || file.path;
+        const name = file.title || fileName.replace(/\.(md|MD)$/i, '');
 
-      return {
-        path: file.path,
-        name: name,
-        relativePath: repositoryPath
-          ? file.path.replace(repositoryPath + '/', '')
-          : file.path,
-        mtime: file.lastModified ? new Date(file.lastModified) : undefined,
-        associatedFiles: file.associatedFiles,
-        isTracked: file.isTracked,
-        hasUncommittedChanges: file.hasUncommittedChanges,
-      };
-    });
+        return {
+          path: file.path,
+          name: name,
+          relativePath: repositoryPath
+            ? file.path.replace(repositoryPath + '/', '')
+            : file.path,
+          mtime: file.lastModified ? new Date(file.lastModified) : undefined,
+          associatedFiles: file.associatedFiles,
+          isTracked: file.isTracked,
+          hasUncommittedChanges: file.hasUncommittedChanges,
+        };
+      });
 
     return docItems;
   }, [markdownSlice, context.currentScope]);
@@ -82,19 +78,36 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
     context.currentScope.workspace?.path ||
     '';
 
-  // Filter documents based on search text
+  // Count tracked documents (those with file references)
+  const trackedDocumentsCount = useMemo(() => {
+    return documents.filter(
+      (doc) => doc.associatedFiles && doc.associatedFiles.length > 0
+    ).length;
+  }, [documents]);
+
+  // Filter documents based on search text and tracked-only filter
   const filteredDocuments = useMemo(() => {
-    if (!filterText.trim()) {
-      return documents;
+    let filtered = documents;
+
+    // Apply tracked-only filter
+    if (showTrackedOnly) {
+      filtered = filtered.filter(
+        (doc) => doc.associatedFiles && doc.associatedFiles.length > 0
+      );
     }
 
-    const searchLower = filterText.toLowerCase();
-    return documents.filter(
-      (doc) =>
-        doc.name.toLowerCase().includes(searchLower) ||
-        doc.relativePath.toLowerCase().includes(searchLower)
-    );
-  }, [documents, filterText]);
+    // Apply search text filter
+    if (filterText.trim()) {
+      const searchLower = filterText.toLowerCase();
+      filtered = filtered.filter(
+        (doc) =>
+          doc.name.toLowerCase().includes(searchLower) ||
+          doc.relativePath.toLowerCase().includes(searchLower)
+      );
+    }
+
+    return filtered;
+  }, [documents, filterText, showTrackedOnly]);
 
   const handleDocumentClick = (path: string) => {
     actions.openFile?.(path);
@@ -106,6 +119,17 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
 
   const handleClearFilter = () => {
     setFilterText('');
+  };
+
+  const handleToggleSearch = () => {
+    setShowSearch(!showSearch);
+    if (showSearch) {
+      setFilterText('');
+    }
+  };
+
+  const handleToggleTrackedOnly = () => {
+    setShowTrackedOnly(!showTrackedOnly);
   };
 
   // Check if markdown slice is loading
@@ -123,104 +147,21 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
         fontFamily: theme.fonts.body,
       }}
     >
-      {/* Header */}
-      <div
-        style={{
-          padding: '12px 16px',
-          borderBottom: `1px solid ${theme.colors.border}`,
-          backgroundColor: theme.colors.backgroundLight,
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            marginBottom: '12px',
-          }}
-        >
-          <Book size={16} color={theme.colors.primary} />
-          <span
-            style={{
-              fontSize: theme.fontSizes[1],
-              color: theme.colors.textSecondary,
-              fontWeight: theme.fontWeights.medium,
-            }}
-          >
-            {documents.length}{' '}
-            {documents.length === 1 ? 'document' : 'documents'}
-          </span>
-        </div>
-
-        {/* Filter Bar */}
-        <div
-          style={{
-            position: 'relative',
-            display: 'flex',
-            alignItems: 'center',
-          }}
-        >
-          <Search
-            size={16}
-            color={theme.colors.textSecondary}
-            style={{
-              position: 'absolute',
-              left: '10px',
-              pointerEvents: 'none',
-            }}
-          />
-          <input
-            type="text"
-            placeholder="Filter documents..."
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            style={{
-              width: '100%',
-              padding: '8px 32px 8px 32px',
-              fontSize: theme.fontSizes[1],
-              color: theme.colors.text,
-              backgroundColor: theme.colors.backgroundSecondary,
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: '4px',
-              outline: 'none',
-              fontFamily: theme.fonts.body,
-              transition: 'border-color 0.2s ease',
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = theme.colors.primary;
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = theme.colors.border;
-            }}
-          />
-          {filterText && (
-            <button
-              onClick={handleClearFilter}
-              style={{
-                position: 'absolute',
-                right: '8px',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: theme.colors.textSecondary,
-                transition: 'color 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = theme.colors.text;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = theme.colors.textSecondary;
-              }}
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
-      </div>
+      {/* Header - show when there are documents or loading */}
+      {(documents.length > 0 || isLoading) && (
+        <PanelHeader
+          documentCount={documents.length}
+          isLoading={isLoading}
+          hasAlexandriaConfig={hasAlexandriaConfig}
+          showTrackedOnly={showTrackedOnly}
+          onToggleTrackedOnly={handleToggleTrackedOnly}
+          showSearch={showSearch}
+          onToggleSearch={handleToggleSearch}
+          filterText={filterText}
+          onFilterTextChange={setFilterText}
+          onClearFilter={handleClearFilter}
+        />
+      )}
 
       {/* Content */}
       <div
@@ -230,61 +171,35 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
         }}
       >
         {isLoading ? (
-          <div
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              padding: '40px',
-              color: theme.colors.textSecondary,
-            }}
-          >
-            <Loader
-              size={24}
-              className="animate-spin"
-              style={{ marginBottom: '12px' }}
-            />
-            <span style={{ fontSize: theme.fontSizes[0] }}>
-              Loading documents...
-            </span>
-          </div>
+          <LoadingSkeleton />
         ) : filteredDocuments.length === 0 ? (
-          <div
-            style={{
-              textAlign: 'center',
-              color: theme.colors.textSecondary,
-              padding: '40px 20px',
-              fontSize: theme.fontSizes[0],
-            }}
-          >
-            <div style={{ marginBottom: '8px', opacity: 0.5 }}>
-              <FileText size={32} />
-            </div>
-            <div style={{ marginBottom: '4px' }}>
-              {filterText ? 'No matching documents' : 'No documents found'}
-            </div>
-            <div style={{ fontSize: theme.fontSizes[0], opacity: 0.8 }}>
-              {filterText
-                ? 'Try a different search term'
-                : 'Markdown documents will appear here'}
-            </div>
-          </div>
+          <EmptyState
+            showTrackedOnly={showTrackedOnly}
+            trackedDocumentsCount={trackedDocumentsCount}
+            filterText={filterText}
+          />
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {filteredDocuments.map((doc) => (
-              <AlexandriaDocItem
-                key={doc.path}
-                doc={doc}
-                onSelect={() => handleDocumentClick(doc.path)}
-                onFileSelect={handleFileSelect}
-                repositoryRoot={repositoryPath}
-                events={events}
-              />
-            ))}
-          </div>
+          <DocumentList
+            documents={filteredDocuments}
+            onDocumentClick={handleDocumentClick}
+            onFileSelect={handleFileSelect}
+            repositoryPath={repositoryPath}
+            events={events}
+          />
         )}
       </div>
+
+      {/* Shimmer animation keyframes */}
+      {isLoading && (
+        <style>
+          {`
+            @keyframes shimmer {
+              0% { background-position: 200% 0; }
+              100% { background-position: -200% 0; }
+            }
+          `}
+        </style>
+      )}
     </div>
   );
 };

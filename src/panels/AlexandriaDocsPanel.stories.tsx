@@ -12,22 +12,52 @@ interface MarkdownFile {
   hasUncommittedChanges?: boolean;
 }
 
+interface AlexandriaConfig {
+  hasConfig: boolean;
+  configPath?: string;
+}
+
+interface MockContextOptions {
+  markdownFiles?: MarkdownFile[];
+  loading?: boolean;
+  hasAlexandriaConfig?: boolean;
+}
+
 // Mock panel context
 const createMockContext = (
-  markdownFiles: MarkdownFile[] = [],
+  optionsOrFiles: MockContextOptions | MarkdownFile[] = [],
   loading = false
 ): PanelComponentProps['context'] => {
+  // Handle both old signature (array, boolean) and new signature (options object)
+  const options: MockContextOptions = Array.isArray(optionsOrFiles)
+    ? { markdownFiles: optionsOrFiles, loading }
+    : optionsOrFiles;
+
+  const markdownFiles = options.markdownFiles ?? [];
+  const isLoading = options.loading ?? false;
+  const hasAlexandriaConfig = options.hasAlexandriaConfig ?? false;
+
   const markdownSlice: DataSlice<MarkdownFile[]> = {
     scope: 'repository',
     name: 'markdown',
     data: markdownFiles,
-    loading,
+    loading: isLoading,
+    error: null,
+    refresh: async () => {},
+  };
+
+  const alexandriaSlice: DataSlice<AlexandriaConfig> = {
+    scope: 'repository',
+    name: 'alexandria',
+    data: { hasConfig: hasAlexandriaConfig },
+    loading: false,
     error: null,
     refresh: async () => {},
   };
 
   const slices = new Map<string, DataSlice>();
   slices.set('markdown', markdownSlice);
+  slices.set('alexandria', alexandriaSlice);
 
   return {
     currentScope: {
@@ -42,14 +72,10 @@ const createMockContext = (
       return slices.get(name) as DataSlice<T> | undefined;
     },
     getWorkspaceSlice: <T,>(name: string): DataSlice<T> | undefined => {
-      return name === 'markdown'
-        ? (slices.get(name) as DataSlice<T> | undefined)
-        : undefined;
+      return slices.get(name) as DataSlice<T> | undefined;
     },
     getRepositorySlice: <T,>(name: string): DataSlice<T> | undefined => {
-      return name === 'markdown'
-        ? (slices.get(name) as DataSlice<T> | undefined)
-        : undefined;
+      return slices.get(name) as DataSlice<T> | undefined;
     },
     hasSlice: (name: string) => slices.has(name),
     isSliceLoading: (name: string) => {
@@ -218,6 +244,142 @@ export const ManyDocuments: Story = {
             : undefined,
       }))
     ),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
+};
+
+// Story 6: With Alexandria Config (shows BookCheck icon)
+export const WithAlexandriaConfig: Story = {
+  args: {
+    context: createMockContext({
+      hasAlexandriaConfig: true,
+      markdownFiles: [
+        {
+          path: '/mock/repository/docs/architecture.md',
+          title: 'Architecture Overview',
+          lastModified: new Date('2025-11-10').getTime(),
+          isTracked: true,
+          associatedFiles: [
+            '/mock/repository/src/core/app.ts',
+            '/mock/repository/src/core/config.ts',
+          ],
+        },
+        {
+          path: '/mock/repository/docs/api.md',
+          title: 'API Documentation',
+          lastModified: new Date('2025-11-08').getTime(),
+          isTracked: true,
+          associatedFiles: [
+            '/mock/repository/src/api/routes.ts',
+          ],
+        },
+        {
+          path: '/mock/repository/README.md',
+          lastModified: new Date('2025-11-14').getTime(),
+        },
+      ],
+    }),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
+};
+
+// Story 7: Without Alexandria Config (shows Book icon)
+export const WithoutAlexandriaConfig: Story = {
+  args: {
+    context: createMockContext({
+      hasAlexandriaConfig: false,
+      markdownFiles: [
+        {
+          path: '/mock/repository/README.md',
+          lastModified: new Date('2025-11-14').getTime(),
+        },
+        {
+          path: '/mock/repository/CONTRIBUTING.md',
+          lastModified: new Date('2025-11-13').getTime(),
+        },
+        {
+          path: '/mock/repository/docs/guide.md',
+          title: 'User Guide',
+          lastModified: new Date('2025-11-10').getTime(),
+        },
+      ],
+    }),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
+};
+
+// Story 8: Documents without tracked files (for tracked filter empty state)
+// Click the FileCode icon button to see the empty state with CLI instructions
+export const NoTrackedDocuments: Story = {
+  args: {
+    context: createMockContext({
+      hasAlexandriaConfig: false,
+      markdownFiles: [
+        {
+          path: '/mock/repository/README.md',
+          lastModified: new Date('2025-11-14').getTime(),
+          isTracked: false,
+        },
+        {
+          path: '/mock/repository/CONTRIBUTING.md',
+          lastModified: new Date('2025-11-13').getTime(),
+          isTracked: false,
+        },
+        {
+          path: '/mock/repository/docs/guide.md',
+          title: 'User Guide',
+          lastModified: new Date('2025-11-10').getTime(),
+          isTracked: false,
+        },
+      ],
+    }),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
+};
+
+// Story 9: Mixed - some tracked, some not (with Alexandria config)
+export const MixedTrackedDocuments: Story = {
+  args: {
+    context: createMockContext({
+      hasAlexandriaConfig: true,
+      markdownFiles: [
+        {
+          path: '/mock/repository/docs/architecture.md',
+          title: 'Architecture Overview',
+          lastModified: new Date('2025-11-10').getTime(),
+          isTracked: true,
+          associatedFiles: [
+            '/mock/repository/src/core/app.ts',
+            '/mock/repository/src/core/config.ts',
+            '/mock/repository/src/core/types.ts',
+          ],
+        },
+        {
+          path: '/mock/repository/README.md',
+          lastModified: new Date('2025-11-14').getTime(),
+          isTracked: false,
+        },
+        {
+          path: '/mock/repository/CONTRIBUTING.md',
+          lastModified: new Date('2025-11-13').getTime(),
+          isTracked: false,
+        },
+        {
+          path: '/mock/repository/docs/api.md',
+          title: 'API Documentation',
+          lastModified: new Date('2025-11-08').getTime(),
+          isTracked: true,
+          associatedFiles: [
+            '/mock/repository/src/api/routes.ts',
+            '/mock/repository/src/api/handlers.ts',
+          ],
+        },
+      ],
+    }),
     actions: createMockActions(),
     events: createMockEvents(),
   },
