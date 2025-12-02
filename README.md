@@ -48,12 +48,28 @@ import { panels } from '@principal-ade/alexandria-docs-panel';
 
 ### Panel Requirements
 
-This panel requires the host application to provide:
+This panel supports multiple data sources with automatic fallback:
 
-- **Data Slice**: `markdown` - Array of `MarkdownFile` objects
+#### Option 1: Adapters (Preferred)
+
+Provide adapters for the panel to use `MemoryPalace` directly:
+
+- **Adapter**: `context.adapters.fileSystem` - FileSystemAdapter from `@principal-ai/alexandria-core-library`
+- **Adapter**: `context.adapters.glob` - GlobAdapter from `@principal-ai/alexandria-core-library`
+- **Data Slice**: `fileTree` - FileTree object (used to detect Alexandria configuration)
 - **Action**: `openFile(filePath: string)` - To open documents when clicked
 
-### Data Slice Format
+When adapters are provided, the panel uses `MemoryPalace.getDocumentsOverview()` to get documents with full tracking info and associated files.
+
+#### Option 2: Data Slices (Legacy/Fallback)
+
+If adapters are not available, the panel falls back to data slices:
+
+- **Data Slice**: `markdown` - Array of `MarkdownFile` objects
+- **Data Slice**: `fileTree` - FileTree object (fallback: derive markdown files from here)
+- **Action**: `openFile(filePath: string)` - To open documents when clicked
+
+### Data Slice Format (Legacy)
 
 ```typescript
 interface MarkdownFile {
@@ -61,14 +77,14 @@ interface MarkdownFile {
   title?: string; // Optional document title
   lastModified: number; // Unix timestamp
 
-  // Optional: Alexandria-specific metadata (Milestone 2)
+  // Optional: Alexandria-specific metadata
   associatedFiles?: string[]; // Array of file paths linked to this document
   isTracked?: boolean; // Whether document is tracked by Alexandria
   hasUncommittedChanges?: boolean; // Git status indicator
 }
 ```
 
-**Note**: The `associatedFiles` feature allows documents to display an expandable tree view of related source files. This is useful for CodebaseView integration where documentation is linked to specific code files.
+**Note**: The adapter-based approach is preferred as it provides richer data (tracked status, associated files from CodebaseViews) without requiring the host to implement Alexandria-specific logic.
 
 ## Development
 
@@ -192,10 +208,40 @@ See [DESIGN.md](./DESIGN.md) for the full design document and architecture detai
 
 ---
 
-**Version**: 0.2.0 (Milestone 2 - In Progress)
+**Version**: 0.4.0 (Milestone 2 - In Progress)
 **Author**: Principal AI
 
 ## Changelog
+
+### v0.4.0 (2025-12-02)
+
+- ✨ **FileTree-based adapters** - Uses `FileTreeFileSystemAdapter` and `FileTreeGlobAdapter` from core library
+- ✨ **ConfigView toggle** - Click the book icon to view Alexandria configuration (Context & Rules tabs)
+- 🔧 Host now only needs to provide `readFile` and `matchesPath` adapters (minimal primitives)
+- 🔧 Requires `@principal-ade/panel-framework-core@0.1.10+` for new adapter types
+- 🔧 Requires `@principal-ai/alexandria-core-library@0.1.42+` for FileTree adapters
+- 📚 Updated Storybook stories with proper mock adapters
+
+### v0.3.1 (2025-12-02)
+
+- 🔧 **Removed markdown slice dependency** - Panel now uses only adapters or fileTree fallback
+- 🔧 Simplified `useAlexandriaData` hook: adapters → fileTree (removed legacy markdown slice path)
+- 🗑️ Removed `MarkdownFile` type from exports (no longer needed)
+
+### v0.3.0 (2025-12-02)
+
+- ✨ **Adapter-based architecture** - Panel can now use `MemoryPalace` directly via host-provided adapters
+- ✨ Uses `MemoryPalace.getDocumentsOverview()` for rich document data (tracking status, associated files)
+- 🔧 Added `useAlexandriaData` hook with automatic fallback: adapters → fileTree
+- 🔧 Requires `@principal-ade/panel-framework-core@0.1.9+` for adapter support
+- 🔧 Requires `@principal-ai/alexandria-core-library@0.1.41+` for browser-safe MemoryPalace
+- 📚 Updated documentation with adapter vs slice options
+
+### v0.2.6 (2025-12-02)
+
+- 🔧 Removed dependency on `alexandria` slice - now derives `hasAlexandriaConfig` from `fileTree` slice
+- 🔧 Panel now checks for `.alexandria/alexandria.json` in the file tree to determine config presence
+- ⬇️ Reduced host application requirements (no need to provide separate `alexandria` slice)
 
 ### v0.2.0 (2025-11-18)
 

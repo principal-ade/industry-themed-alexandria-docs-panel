@@ -2,69 +2,115 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider } from '@principal-ade/industry-theme';
 import { AlexandriaDocsPanel } from './AlexandriaDocsPanel';
 import type { PanelComponentProps, DataSlice } from '../types';
+import type { FileTree, FileInfo, DirectoryInfo } from '@principal-ai/repository-abstraction';
+import picomatch from 'picomatch';
 
-interface MarkdownFile {
+// ============================================================================
+// Mock Data Types
+// ============================================================================
+
+interface MockFile {
   path: string;
-  title?: string;
-  lastModified?: number;
-  associatedFiles?: string[];
-  isTracked?: boolean;
-  hasUncommittedChanges?: boolean;
-}
-
-interface AlexandriaConfig {
-  hasConfig: boolean;
-  configPath?: string;
+  relativePath: string;
+  name: string;
+  extension: string;
+  content?: string; // For readFile mock
+  lastModified?: Date;
 }
 
 interface MockContextOptions {
-  markdownFiles?: MarkdownFile[];
+  files?: MockFile[];
   loading?: boolean;
   hasAlexandriaConfig?: boolean;
+  /** Mock file contents for readFile adapter */
+  fileContents?: Record<string, string>;
 }
 
-// Mock panel context
-const createMockContext = (
-  optionsOrFiles: MockContextOptions | MarkdownFile[] = [],
-  loading = false
-): PanelComponentProps['context'] => {
-  // Handle both old signature (array, boolean) and new signature (options object)
-  const options: MockContextOptions = Array.isArray(optionsOrFiles)
-    ? { markdownFiles: optionsOrFiles, loading }
-    : optionsOrFiles;
+// ============================================================================
+// Mock FileTree Builder
+// ============================================================================
 
-  const markdownFiles = options.markdownFiles ?? [];
-  const isLoading = options.loading ?? false;
-  const hasAlexandriaConfig = options.hasAlexandriaConfig ?? false;
+function createMockFileTree(files: MockFile[], repositoryPath: string): FileTree {
+  const allFiles: FileInfo[] = files
+    .filter((f) => !f.path.endsWith('/'))
+    .map((f) => ({
+      path: f.path,
+      name: f.name,
+      extension: f.extension,
+      size: f.content?.length ?? 100,
+      lastModified: f.lastModified ?? new Date(),
+      isDirectory: false,
+      relativePath: f.relativePath,
+    }));
 
-  const markdownSlice: DataSlice<MarkdownFile[]> = {
-    scope: 'repository',
-    name: 'markdown',
-    data: markdownFiles,
-    loading: isLoading,
-    error: null,
-    refresh: async () => {},
+  const root: DirectoryInfo = {
+    path: repositoryPath,
+    name: repositoryPath.split('/').pop() || 'repository',
+    children: [],
+    fileCount: allFiles.length,
+    totalSize: allFiles.reduce((sum, f) => sum + f.size, 0),
+    depth: 0,
+    relativePath: '',
   };
 
-  const alexandriaSlice: DataSlice<AlexandriaConfig> = {
+  return {
+    sha: 'mock-sha',
+    root,
+    allFiles,
+    allDirectories: [root],
+    stats: {
+      totalFiles: allFiles.length,
+      totalDirectories: 1,
+      totalSize: root.totalSize,
+      maxDepth: 2,
+    },
+    metadata: {
+      id: 'mock-filetree',
+      timestamp: new Date(),
+      sourceType: 'mock',
+      sourceInfo: {},
+    },
+  };
+}
+
+// ============================================================================
+// Mock Context Factory
+// ============================================================================
+
+const REPOSITORY_PATH = '/mock/repository';
+
+function createMockContext(options: MockContextOptions = {}): PanelComponentProps['context'] {
+  const { files = [], loading = false, fileContents = {} } = options;
+
+  // Build FileTree from files
+  const fileTree = createMockFileTree(files, REPOSITORY_PATH);
+
+  const fileTreeSlice: DataSlice<FileTree> = {
     scope: 'repository',
-    name: 'alexandria',
-    data: { hasConfig: hasAlexandriaConfig },
-    loading: false,
+    name: 'fileTree',
+    data: fileTree,
+    loading,
     error: null,
     refresh: async () => {},
   };
 
   const slices = new Map<string, DataSlice>();
-  slices.set('markdown', markdownSlice);
-  slices.set('alexandria', alexandriaSlice);
+  slices.set('fileTree', fileTreeSlice);
+
+  // Build file contents map (for readFile adapter)
+  const allFileContents: Record<string, string> = { ...fileContents };
+  for (const file of files) {
+    if (file.content && !allFileContents[file.path]) {
+      allFileContents[file.path] = file.content;
+    }
+  }
 
   return {
     currentScope: {
       type: 'repository',
       repository: {
         name: 'mock-repository',
-        path: '/mock/repository',
+        path: REPOSITORY_PATH,
       },
     },
     slices: slices as ReadonlyMap<string, DataSlice>,
@@ -83,27 +129,114 @@ const createMockContext = (
       return slice ? slice.loading : false;
     },
     refresh: async () => {},
+    // Adapters for FileTree-based MemoryPalace
+    adapters: {
+      readFile: async (path: string): Promise<string> => {
+        const content = allFileContents[path];
+        if (content === undefined) {
+          throw new Error(`File not found: ${path}`);
+        }
+        return content;
+      },
+      matchesPath: (pattern: string, path: string): boolean => {
+        return picomatch(pattern)(path);
+      },
+    },
   };
-};
+}
 
-// Mock panel actions
+// ============================================================================
+// Mock Actions & Events
+// ============================================================================
+
 const createMockActions = (): PanelComponentProps['actions'] => ({
   openFile: (filePath: string) => {
-    console.warn('[Storybook] Opening file:', filePath);
+    console.log('[Storybook] Opening file:', filePath);
   },
   openGitDiff: () => {},
   navigateToPanel: () => {},
   notifyPanels: () => {},
 });
 
-// Mock panel events
 const createMockEvents = (): PanelComponentProps['events'] => ({
   emit: (event) => {
-    console.warn('[Storybook] Event emitted:', event);
+    console.log('[Storybook] Event emitted:', event);
   },
   on: () => () => {},
   off: () => {},
 });
+
+// ============================================================================
+// Alexandria Config & Views
+// ============================================================================
+
+const ALEXANDRIA_CONFIG = JSON.stringify({
+  version: 1,
+  limits: {
+    noteMaxLength: 10000,
+    maxTagsPerNote: 20,
+    maxAnchorsPerNote: 50,
+    tagDescriptionMaxLength: 500,
+  },
+  storage: { compressionEnabled: false },
+  context: {
+    useGitignore: true,
+    maxDepth: 10,
+    followSymlinks: false,
+    patterns: {
+      include: ['**/*.md', '**/*.mdx', 'docs/**/*'],
+      exclude: ['**/node_modules/**', '**/dist/**', '**/.git/**'],
+    },
+    rules: [
+      {
+        id: 'document-organization',
+        name: 'Document Organization',
+        severity: 'warning',
+        enabled: true,
+        options: {
+          documentFolders: ['docs', '.alexandria'],
+          rootExceptions: ['README.md', 'CHANGELOG.md'],
+        },
+      },
+      {
+        id: 'filename-convention',
+        name: 'Filename Convention',
+        severity: 'warning',
+        enabled: true,
+        options: {
+          style: 'kebab-case',
+        },
+      },
+    ],
+  },
+});
+
+function createCodebaseView(
+  id: string,
+  name: string,
+  overviewPath: string,
+  files: string[]
+): string {
+  return JSON.stringify({
+    id,
+    version: '1.0',
+    name,
+    description: `Documentation for ${name}`,
+    overviewPath,
+    category: 'guide',
+    displayOrder: 1,
+    referenceGroups: {
+      main: {
+        coordinates: [0, 0],
+        files,
+      },
+    },
+  });
+}
+
+// ============================================================================
+// Story Configuration
+// ============================================================================
 
 const meta: Meta<typeof AlexandriaDocsPanel> = {
   title: 'Panels/Alexandria Docs Panel',
@@ -125,10 +258,14 @@ const meta: Meta<typeof AlexandriaDocsPanel> = {
 export default meta;
 type Story = StoryObj<typeof AlexandriaDocsPanel>;
 
-// Story 1: Empty state
+// ============================================================================
+// Stories
+// ============================================================================
+
+// Story 1: Empty state (no files)
 export const EmptyState: Story = {
   args: {
-    context: createMockContext([]),
+    context: createMockContext({ files: [] }),
     actions: createMockActions(),
     events: createMockEvents(),
   },
@@ -137,90 +274,123 @@ export const EmptyState: Story = {
 // Story 2: Loading state
 export const LoadingState: Story = {
   args: {
-    context: createMockContext([], true),
+    context: createMockContext({ files: [], loading: true }),
     actions: createMockActions(),
     events: createMockEvents(),
   },
 };
 
-// Story 3: With documents
+// Story 3: With documents (no Alexandria config - fileTree fallback)
 export const WithDocuments: Story = {
   args: {
-    context: createMockContext([
-      {
-        path: '/mock/repository/README.md',
-        lastModified: new Date('2025-11-14').getTime(),
-      },
-      {
-        path: '/mock/repository/CONTRIBUTING.md',
-        lastModified: new Date('2025-11-13').getTime(),
-      },
-      {
-        path: '/mock/repository/docs/architecture.md',
-        title: 'Architecture Overview',
-        lastModified: new Date('2025-11-10').getTime(),
-      },
-      {
-        path: '/mock/repository/docs/api/endpoints.md',
-        title: 'API Endpoints',
-        lastModified: new Date('2025-11-08').getTime(),
-      },
-      {
-        path: '/mock/repository/docs/getting-started.md',
-        title: 'Getting Started Guide',
-        lastModified: new Date('2025-11-05').getTime(),
-      },
-    ]),
+    context: createMockContext({
+      files: [
+        {
+          path: `${REPOSITORY_PATH}/README.md`,
+          relativePath: 'README.md',
+          name: 'README.md',
+          extension: '.md',
+          lastModified: new Date('2025-11-14'),
+        },
+        {
+          path: `${REPOSITORY_PATH}/CONTRIBUTING.md`,
+          relativePath: 'CONTRIBUTING.md',
+          name: 'CONTRIBUTING.md',
+          extension: '.md',
+          lastModified: new Date('2025-11-13'),
+        },
+        {
+          path: `${REPOSITORY_PATH}/docs/architecture.md`,
+          relativePath: 'docs/architecture.md',
+          name: 'architecture.md',
+          extension: '.md',
+          lastModified: new Date('2025-11-10'),
+        },
+        {
+          path: `${REPOSITORY_PATH}/docs/api/endpoints.md`,
+          relativePath: 'docs/api/endpoints.md',
+          name: 'endpoints.md',
+          extension: '.md',
+          lastModified: new Date('2025-11-08'),
+        },
+        {
+          path: `${REPOSITORY_PATH}/docs/getting-started.md`,
+          relativePath: 'docs/getting-started.md',
+          name: 'getting-started.md',
+          extension: '.md',
+          lastModified: new Date('2025-11-05'),
+        },
+      ],
+    }),
     actions: createMockActions(),
     events: createMockEvents(),
   },
 };
 
-// Story 4: With Associated Files
-export const WithAssociatedFiles: Story = {
+// Story 4: With Alexandria config and tracked documents
+export const WithTrackedDocuments: Story = {
   args: {
-    context: createMockContext([
-      {
-        path: '/mock/repository/docs/architecture.md',
-        title: 'Architecture Overview',
-        lastModified: new Date('2025-11-10').getTime(),
-        isTracked: true,
-        associatedFiles: [
-          '/mock/repository/src/core/app.ts',
-          '/mock/repository/src/core/config.ts',
-          '/mock/repository/src/core/types.ts',
-          '/mock/repository/src/services/api.ts',
-          '/mock/repository/src/services/database.ts',
-        ],
-      },
-      {
-        path: '/mock/repository/docs/api/endpoints.md',
-        title: 'API Endpoints',
-        lastModified: new Date('2025-11-08').getTime(),
-        isTracked: true,
-        associatedFiles: [
-          '/mock/repository/src/api/routes.ts',
-          '/mock/repository/src/api/handlers/users.ts',
-          '/mock/repository/src/api/handlers/auth.ts',
-        ],
-      },
-      {
-        path: '/mock/repository/README.md',
-        lastModified: new Date('2025-11-14').getTime(),
-        isTracked: false,
-      },
-      {
-        path: '/mock/repository/docs/database-schema.md',
-        title: 'Database Schema',
-        lastModified: new Date('2025-11-07').getTime(),
-        isTracked: true,
-        hasUncommittedChanges: true,
-        associatedFiles: [
-          '/mock/repository/src/database/schema.sql',
-          '/mock/repository/src/database/migrations/001_initial.sql',
-        ],
-      },
-    ]),
+    context: createMockContext({
+      files: [
+        // Alexandria config
+        {
+          path: `${REPOSITORY_PATH}/.alexandria/alexandria.json`,
+          relativePath: '.alexandria/alexandria.json',
+          name: 'alexandria.json',
+          extension: '.json',
+          content: ALEXANDRIA_CONFIG,
+        },
+        // Tracked document with view
+        {
+          path: `${REPOSITORY_PATH}/.alexandria/views/architecture-view.json`,
+          relativePath: '.alexandria/views/architecture-view.json',
+          name: 'architecture-view.json',
+          extension: '.json',
+          content: createCodebaseView(
+            'architecture-view',
+            'Architecture Overview',
+            'docs/architecture.md',
+            ['src/core/app.ts', 'src/core/config.ts', 'src/core/types.ts']
+          ),
+        },
+        {
+          path: `${REPOSITORY_PATH}/.alexandria/views/api-view.json`,
+          relativePath: '.alexandria/views/api-view.json',
+          name: 'api-view.json',
+          extension: '.json',
+          content: createCodebaseView('api-view', 'API Documentation', 'docs/api.md', [
+            'src/api/routes.ts',
+            'src/api/handlers/users.ts',
+            'src/api/handlers/auth.ts',
+          ]),
+        },
+        // Markdown documents
+        {
+          path: `${REPOSITORY_PATH}/docs/architecture.md`,
+          relativePath: 'docs/architecture.md',
+          name: 'architecture.md',
+          extension: '.md',
+          content: '# Architecture\n\nThis document describes the system architecture.',
+          lastModified: new Date('2025-11-10'),
+        },
+        {
+          path: `${REPOSITORY_PATH}/docs/api.md`,
+          relativePath: 'docs/api.md',
+          name: 'api.md',
+          extension: '.md',
+          content: '# API Documentation\n\nAPI endpoints and usage.',
+          lastModified: new Date('2025-11-08'),
+        },
+        {
+          path: `${REPOSITORY_PATH}/README.md`,
+          relativePath: 'README.md',
+          name: 'README.md',
+          extension: '.md',
+          content: '# My Project\n\nProject description.',
+          lastModified: new Date('2025-11-14'),
+        },
+      ],
+    }),
     actions: createMockActions(),
     events: createMockEvents(),
   },
@@ -229,154 +399,76 @@ export const WithAssociatedFiles: Story = {
 // Story 5: Many documents
 export const ManyDocuments: Story = {
   args: {
-    context: createMockContext(
-      Array.from({ length: 50 }, (_, i) => ({
-        path: `/mock/repository/docs/section-${Math.floor(i / 10)}/doc-${i}.md`,
-        title: `Document ${i}`,
-        lastModified: new Date(2025, 10, 14 - i).getTime(),
-        isTracked: i % 3 === 0,
-        associatedFiles:
-          i % 3 === 0
-            ? [
-                `/mock/repository/src/components/component-${i}.tsx`,
-                `/mock/repository/src/utils/util-${i}.ts`,
-              ]
-            : undefined,
-      }))
-    ),
-    actions: createMockActions(),
-    events: createMockEvents(),
-  },
-};
-
-// Story 6: With Alexandria Config (shows BookCheck icon)
-export const WithAlexandriaConfig: Story = {
-  args: {
     context: createMockContext({
-      hasAlexandriaConfig: true,
-      markdownFiles: [
-        {
-          path: '/mock/repository/docs/architecture.md',
-          title: 'Architecture Overview',
-          lastModified: new Date('2025-11-10').getTime(),
-          isTracked: true,
-          associatedFiles: [
-            '/mock/repository/src/core/app.ts',
-            '/mock/repository/src/core/config.ts',
-          ],
-        },
-        {
-          path: '/mock/repository/docs/api.md',
-          title: 'API Documentation',
-          lastModified: new Date('2025-11-08').getTime(),
-          isTracked: true,
-          associatedFiles: [
-            '/mock/repository/src/api/routes.ts',
-          ],
-        },
-        {
-          path: '/mock/repository/README.md',
-          lastModified: new Date('2025-11-14').getTime(),
-        },
-      ],
+      files: Array.from({ length: 50 }, (_, i) => ({
+        path: `${REPOSITORY_PATH}/docs/section-${Math.floor(i / 10)}/doc-${i}.md`,
+        relativePath: `docs/section-${Math.floor(i / 10)}/doc-${i}.md`,
+        name: `doc-${i}.md`,
+        extension: '.md',
+        lastModified: new Date(2025, 10, 14 - (i % 30)),
+      })),
     }),
     actions: createMockActions(),
     events: createMockEvents(),
   },
 };
 
-// Story 7: Without Alexandria Config (shows Book icon)
-export const WithoutAlexandriaConfig: Story = {
-  args: {
-    context: createMockContext({
-      hasAlexandriaConfig: false,
-      markdownFiles: [
-        {
-          path: '/mock/repository/README.md',
-          lastModified: new Date('2025-11-14').getTime(),
-        },
-        {
-          path: '/mock/repository/CONTRIBUTING.md',
-          lastModified: new Date('2025-11-13').getTime(),
-        },
-        {
-          path: '/mock/repository/docs/guide.md',
-          title: 'User Guide',
-          lastModified: new Date('2025-11-10').getTime(),
-        },
-      ],
-    }),
-    actions: createMockActions(),
-    events: createMockEvents(),
-  },
-};
-
-// Story 8: Documents without tracked files (for tracked filter empty state)
-// Click the FileCode icon button to see the empty state with CLI instructions
-export const NoTrackedDocuments: Story = {
-  args: {
-    context: createMockContext({
-      hasAlexandriaConfig: false,
-      markdownFiles: [
-        {
-          path: '/mock/repository/README.md',
-          lastModified: new Date('2025-11-14').getTime(),
-          isTracked: false,
-        },
-        {
-          path: '/mock/repository/CONTRIBUTING.md',
-          lastModified: new Date('2025-11-13').getTime(),
-          isTracked: false,
-        },
-        {
-          path: '/mock/repository/docs/guide.md',
-          title: 'User Guide',
-          lastModified: new Date('2025-11-10').getTime(),
-          isTracked: false,
-        },
-      ],
-    }),
-    actions: createMockActions(),
-    events: createMockEvents(),
-  },
-};
-
-// Story 9: Mixed - some tracked, some not (with Alexandria config)
+// Story 6: Mixed tracked and untracked documents
 export const MixedTrackedDocuments: Story = {
   args: {
     context: createMockContext({
-      hasAlexandriaConfig: true,
-      markdownFiles: [
+      files: [
+        // Alexandria config
         {
-          path: '/mock/repository/docs/architecture.md',
-          title: 'Architecture Overview',
-          lastModified: new Date('2025-11-10').getTime(),
-          isTracked: true,
-          associatedFiles: [
-            '/mock/repository/src/core/app.ts',
-            '/mock/repository/src/core/config.ts',
-            '/mock/repository/src/core/types.ts',
-          ],
+          path: `${REPOSITORY_PATH}/.alexandria/alexandria.json`,
+          relativePath: '.alexandria/alexandria.json',
+          name: 'alexandria.json',
+          extension: '.json',
+          content: ALEXANDRIA_CONFIG,
+        },
+        // One tracked view
+        {
+          path: `${REPOSITORY_PATH}/.alexandria/views/architecture-view.json`,
+          relativePath: '.alexandria/views/architecture-view.json',
+          name: 'architecture-view.json',
+          extension: '.json',
+          content: createCodebaseView(
+            'architecture-view',
+            'Architecture Overview',
+            'docs/architecture.md',
+            ['src/core/app.ts', 'src/core/config.ts', 'src/core/types.ts']
+          ),
+        },
+        // Tracked document
+        {
+          path: `${REPOSITORY_PATH}/docs/architecture.md`,
+          relativePath: 'docs/architecture.md',
+          name: 'architecture.md',
+          extension: '.md',
+          content: '# Architecture Overview',
+          lastModified: new Date('2025-11-10'),
+        },
+        // Untracked documents
+        {
+          path: `${REPOSITORY_PATH}/README.md`,
+          relativePath: 'README.md',
+          name: 'README.md',
+          extension: '.md',
+          lastModified: new Date('2025-11-14'),
         },
         {
-          path: '/mock/repository/README.md',
-          lastModified: new Date('2025-11-14').getTime(),
-          isTracked: false,
+          path: `${REPOSITORY_PATH}/CONTRIBUTING.md`,
+          relativePath: 'CONTRIBUTING.md',
+          name: 'CONTRIBUTING.md',
+          extension: '.md',
+          lastModified: new Date('2025-11-13'),
         },
         {
-          path: '/mock/repository/CONTRIBUTING.md',
-          lastModified: new Date('2025-11-13').getTime(),
-          isTracked: false,
-        },
-        {
-          path: '/mock/repository/docs/api.md',
-          title: 'API Documentation',
-          lastModified: new Date('2025-11-08').getTime(),
-          isTracked: true,
-          associatedFiles: [
-            '/mock/repository/src/api/routes.ts',
-            '/mock/repository/src/api/handlers.ts',
-          ],
+          path: `${REPOSITORY_PATH}/docs/guide.md`,
+          relativePath: 'docs/guide.md',
+          name: 'guide.md',
+          extension: '.md',
+          lastModified: new Date('2025-11-10'),
         },
       ],
     }),

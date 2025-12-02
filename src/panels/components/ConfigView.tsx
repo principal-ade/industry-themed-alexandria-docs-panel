@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
 import {
-  BookMarked,
   ChevronRight,
   Copy,
   Check,
-  FileText,
   FolderTree,
   Shield,
 } from 'lucide-react';
@@ -496,57 +494,6 @@ export const ConfigView: React.FC<ConfigViewProps> = ({
         fontFamily: theme.fonts.body,
       }}
     >
-      {/* Header */}
-      <div
-        style={{
-          padding: '12px 16px',
-          borderBottom: `1px solid ${theme.colors.border}`,
-          backgroundColor: theme.colors.backgroundLight,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <BookMarked size={16} color={theme.colors.primary} />
-          <span
-            style={{
-              fontSize: theme.fontSizes[1],
-              color: theme.colors.text,
-              fontWeight: theme.fontWeights.medium,
-            }}
-          >
-            Alexandria Configuration
-          </span>
-        </div>
-        {onOpenConfig && (
-          <button
-            onClick={onOpenConfig}
-            style={{
-              background: 'none',
-              border: '1px solid transparent',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              padding: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: theme.colors.textSecondary,
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.color = theme.colors.text;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.color = theme.colors.textSecondary;
-            }}
-            title="Open config file"
-          >
-            <FileText size={16} />
-          </button>
-        )}
-      </div>
-
       {/* Tabs */}
       <div
         style={{

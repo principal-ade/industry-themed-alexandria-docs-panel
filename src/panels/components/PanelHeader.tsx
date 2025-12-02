@@ -13,6 +13,8 @@ interface PanelHeaderProps {
   filterText: string;
   onFilterTextChange: (text: string) => void;
   onClearFilter: () => void;
+  showConfigView?: boolean;
+  onToggleConfigView?: () => void;
 }
 
 export const PanelHeader: React.FC<PanelHeaderProps> = ({
@@ -26,6 +28,8 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
   filterText,
   onFilterTextChange,
   onClearFilter,
+  showConfigView,
+  onToggleConfigView,
 }) => {
   const { theme } = useTheme();
 
@@ -51,11 +55,40 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
             gap: '8px',
           }}
         >
-          {hasAlexandriaConfig ? (
-            <BookMarked size={16} color={theme.colors.primary} />
-          ) : (
-            <Book size={16} color={theme.colors.primary} />
-          )}
+          <button
+            onClick={onToggleConfigView}
+            disabled={!hasAlexandriaConfig}
+            style={{
+              background: showConfigView
+                ? theme.colors.backgroundSecondary
+                : 'none',
+              border: `1px solid ${showConfigView ? theme.colors.border : 'transparent'}`,
+              borderRadius: '4px',
+              cursor: hasAlexandriaConfig ? 'pointer' : 'default',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: showConfigView
+                ? theme.colors.primary
+                : theme.colors.primary,
+              opacity: hasAlexandriaConfig ? 1 : 0.6,
+              transition: 'all 0.2s ease',
+            }}
+            title={
+              hasAlexandriaConfig
+                ? showConfigView
+                  ? 'Hide Alexandria configuration'
+                  : 'Show Alexandria configuration'
+                : 'No Alexandria configuration found'
+            }
+          >
+            {hasAlexandriaConfig ? (
+              <BookMarked size={16} />
+            ) : (
+              <Book size={16} />
+            )}
+          </button>
           {isLoading ? (
             <div
               style={{
@@ -76,7 +109,9 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
                 fontWeight: theme.fontWeights.medium,
               }}
             >
-              {documentCount} {documentCount === 1 ? 'document' : 'documents'}
+              {showConfigView
+                ? 'Alexandria Config'
+                : `${documentCount} ${documentCount === 1 ? 'document' : 'documents'}`}
             </span>
           )}
         </div>

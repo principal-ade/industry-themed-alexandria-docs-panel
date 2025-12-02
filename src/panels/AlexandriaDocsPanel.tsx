@@ -1,15 +1,13 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
 import type { PanelComponentProps } from '../types';
-import type {
-  AlexandriaDocItemData,
-  MarkdownFile,
-  AlexandriaConfigSlice,
-} from './components/types';
+import type { AlexandriaDocItemData, AlexandriaConfig } from './components/types';
 import { PanelHeader } from './components/PanelHeader';
 import { DocumentList } from './components/DocumentList';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
 import { EmptyState } from './components/EmptyState';
+import { ConfigView } from './components/ConfigView';
+import { useAlexandriaData } from '../hooks';
 
 // Re-export types for external use
 export type { AlexandriaDocItemData } from './components/types';
@@ -23,60 +21,46 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
   const [filterText, setFilterText] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [showTrackedOnly, setShowTrackedOnly] = useState(false);
+  const [showConfigView, setShowConfigView] = useState(false);
+  const [alexandriaConfig, setAlexandriaConfig] = useState<AlexandriaConfig | null>(null);
 
-  // Extract markdown files from markdown slice
-  const markdownSlice = context.getSlice<MarkdownFile[]>('markdown');
-
-  // Check for Alexandria config
-  const alexandriaSlice = context.getSlice<AlexandriaConfigSlice>('alexandria');
-  const hasAlexandriaConfig = alexandriaSlice?.data?.hasConfig ?? false;
-
-  const documents = useMemo(() => {
-    // If no slice or still loading, return empty array
-    if (!markdownSlice || markdownSlice.loading || !markdownSlice.data) {
-      return [];
-    }
-
-    // Get the repository path from current scope
-    const repositoryPath =
-      context.currentScope.repository?.path ||
-      context.currentScope.workspace?.path ||
-      '';
-
-    // Convert markdown files to our document format
-    // Filter out files in .palace-work or .backlog directories
-    const docItems: AlexandriaDocItemData[] = markdownSlice.data
-      .filter((file) => {
-        return (
-          !file.path.includes('/.palace-work/') &&
-          !file.path.includes('/.backlog/')
-        );
-      })
-      .map((file) => {
-        const fileName = file.path.split('/').pop() || file.path;
-        const name = file.title || fileName.replace(/\.(md|MD)$/i, '');
-
-        return {
-          path: file.path,
-          name: name,
-          relativePath: repositoryPath
-            ? file.path.replace(repositoryPath + '/', '')
-            : file.path,
-          mtime: file.lastModified ? new Date(file.lastModified) : undefined,
-          associatedFiles: file.associatedFiles,
-          isTracked: file.isTracked,
-          hasUncommittedChanges: file.hasUncommittedChanges,
-        };
-      });
-
-    return docItems;
-  }, [markdownSlice, context.currentScope]);
+  // Use the new hook that handles adapters, slices, and fallbacks
+  const { documents, isLoading, hasAlexandriaConfig } = useAlexandriaData(context);
 
   // Get repository path for file tree
   const repositoryPath =
     context.currentScope.repository?.path ||
     context.currentScope.workspace?.path ||
     '';
+
+  // Config file path
+  const configPath = repositoryPath ? `${repositoryPath}/.alexandria/alexandria.json` : '';
+
+  // Load Alexandria config when showing config view
+  useEffect(() => {
+    if (!showConfigView || !hasAlexandriaConfig || !configPath) {
+      return;
+    }
+
+    const loadConfig = async () => {
+      try {
+        const readFile = context.adapters?.readFile;
+        if (!readFile) {
+          console.warn('[AlexandriaDocsPanel] No readFile adapter available');
+          return;
+        }
+
+        const content = await readFile(configPath);
+        const config = JSON.parse(content) as AlexandriaConfig;
+        setAlexandriaConfig(config);
+      } catch (err) {
+        console.error('[AlexandriaDocsPanel] Failed to load Alexandria config:', err);
+        setAlexandriaConfig(null);
+      }
+    };
+
+    loadConfig();
+  }, [showConfigView, hasAlexandriaConfig, configPath, context.adapters]);
 
   // Count tracked documents (those with file references)
   const trackedDocumentsCount = useMemo(() => {
@@ -132,8 +116,15 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
     setShowTrackedOnly(!showTrackedOnly);
   };
 
-  // Check if markdown slice is loading
-  const isLoading = context.isSliceLoading('markdown');
+  const handleToggleConfigView = () => {
+    setShowConfigView(!showConfigView);
+  };
+
+  const handleOpenConfig = () => {
+    if (configPath) {
+      actions.openFile?.(configPath);
+    }
+  };
 
   return (
     <div
@@ -160,6 +151,8 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
           filterText={filterText}
           onFilterTextChange={setFilterText}
           onClearFilter={handleClearFilter}
+          showConfigView={showConfigView}
+          onToggleConfigView={handleToggleConfigView}
         />
       )}
 
@@ -170,7 +163,13 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
           overflow: 'auto',
         }}
       >
-        {isLoading ? (
+        {showConfigView && alexandriaConfig ? (
+          <ConfigView
+            config={alexandriaConfig}
+            configPath={configPath}
+            onOpenConfig={handleOpenConfig}
+          />
+        ) : isLoading ? (
           <LoadingSkeleton />
         ) : filteredDocuments.length === 0 ? (
           <EmptyState
