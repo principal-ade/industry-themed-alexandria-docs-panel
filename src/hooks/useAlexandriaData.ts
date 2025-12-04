@@ -6,7 +6,7 @@
  *
  * Required from host:
  * - fileTree slice: FileTree from @principal-ai/repository-abstraction
- * - adapters.readFile: (path: string) => string | Promise<string>
+ * - adapters.readFile: (path: string) => Promise<string>
  * - adapters.matchesPath: (pattern: string, path: string) => boolean
  */
 
@@ -19,6 +19,7 @@ import {
   MemoryPalace,
   FileTreeFileSystemAdapter,
   FileTreeGlobAdapter,
+  CONFIG_FILENAME,
 } from '@principal-ai/alexandria-core-library';
 import type { DocumentOverview } from '@principal-ai/alexandria-core-library';
 
@@ -56,24 +57,40 @@ export function useAlexandriaData(context: PanelContextValue): UseAlexandriaData
     context.currentScope.workspace?.path ||
     '';
 
-  // Check for Alexandria config in fileTree
-  const hasAlexandriaConfig = useMemo(() => {
-    if (!fileTree?.allFiles) return false;
-    return fileTree.allFiles.some(
-      (file) =>
-        file.path.endsWith('.alexandria/alexandria.json') ||
-        file.path.endsWith('/.alexandria/alexandria.json')
-    );
-  }, [fileTree]);
-
-  // Check if we have the required adapters (readFile and matchesPath)
-  const readFile = context.adapters?.readFile as ((path: string) => string | Promise<string>) | undefined;
+  // Get adapters from context (browser environment - readFile is always async)
+  const readFile = context.adapters?.readFile as ((path: string) => Promise<string>) | undefined;
   const matchesPath = context.adapters?.matchesPath as ((pattern: string, path: string) => boolean) | undefined;
-  const hasRequiredAdapters = !!readFile && !!matchesPath;
 
-  // Load data using MemoryPalace when fileTree and adapters are available
+  // Create FileSystemAdapter when we have required deps (used for config detection and data loading)
+  const fsAdapter = useMemo(() => {
+    if (!fileTree || !readFile || !repositoryPath) return null;
+    return new FileTreeFileSystemAdapter({
+      fileTree,
+      repositoryPath,
+      readFile,
+    });
+  }, [fileTree, repositoryPath, readFile]);
+
+  // Use FileSystemAdapter.exists() to check for Alexandria config
+  // Panel uses relative paths - the adapter handles path normalization
+  const hasAlexandriaConfig = useMemo(() => {
+    if (!fsAdapter) return false;
+    return fsAdapter.exists(CONFIG_FILENAME);
+  }, [fsAdapter]);
+
+  // Create GlobAdapter when we have required deps
+  const globAdapter = useMemo(() => {
+    if (!fileTree || !matchesPath || !repositoryPath) return null;
+    return new FileTreeGlobAdapter({
+      fileTree,
+      repositoryPath,
+      matchesPath,
+    });
+  }, [fileTree, repositoryPath, matchesPath]);
+
+  // Load data using MemoryPalace when adapters are available and config exists
   useEffect(() => {
-    if (!fileTree || !hasRequiredAdapters || !hasAlexandriaConfig || !repositoryPath) {
+    if (!fsAdapter || !globAdapter || !hasAlexandriaConfig || !repositoryPath) {
       setPalaceDocuments(null);
       return;
     }
@@ -83,23 +100,7 @@ export function useAlexandriaData(context: PanelContextValue): UseAlexandriaData
       setPalaceError(null);
 
       try {
-        // Create FileTree-based adapters
-        const fsAdapter = new FileTreeFileSystemAdapter({
-          fileTree,
-          repositoryPath,
-          readFile: readFile!,
-        });
-
-        const globAdapter = new FileTreeGlobAdapter({
-          fileTree,
-          repositoryPath,
-          matchesPath: matchesPath!,
-        });
-
-        // Create MemoryPalace instance
         const palace = new MemoryPalace(repositoryPath, fsAdapter);
-
-        // Get documents with tracking info
         const overviews: DocumentOverview[] = await palace.getDocumentsOverview(globAdapter);
 
         // Convert DocumentOverview to AlexandriaDocItemData
@@ -107,7 +108,7 @@ export function useAlexandriaData(context: PanelContextValue): UseAlexandriaData
           path: doc.path,
           name: doc.title,
           relativePath: doc.relativePath,
-          mtime: undefined, // DocumentOverview doesn't include lastModified yet
+          mtime: undefined,
           associatedFiles: doc.associatedFiles,
           isTracked: doc.isTracked,
           hasUncommittedChanges: undefined,
@@ -124,7 +125,7 @@ export function useAlexandriaData(context: PanelContextValue): UseAlexandriaData
     };
 
     loadWithMemoryPalace();
-  }, [fileTree, hasRequiredAdapters, hasAlexandriaConfig, repositoryPath, readFile, matchesPath]);
+  }, [fsAdapter, globAdapter, hasAlexandriaConfig, repositoryPath]);
 
   // Determine which data source to use and compute documents
   const result = useMemo((): UseAlexandriaDataResult => {

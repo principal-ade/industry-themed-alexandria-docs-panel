@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider } from '@principal-ade/industry-theme';
+import { CONFIG_FILENAME } from '@principal-ai/alexandria-core-library';
 import { AlexandriaDocsPanel } from './AlexandriaDocsPanel';
 import type { PanelComponentProps, DataSlice } from '../types';
 import type { FileTree, FileInfo, DirectoryInfo } from '@principal-ai/repository-abstraction';
@@ -31,10 +32,11 @@ interface MockContextOptions {
 // ============================================================================
 
 function createMockFileTree(files: MockFile[], repositoryPath: string): FileTree {
+  // Use relative paths in the FileTree (matching real electron app behavior)
   const allFiles: FileInfo[] = files
     .filter((f) => !f.path.endsWith('/'))
     .map((f) => ({
-      path: f.path,
+      path: f.relativePath, // Use relativePath as path (matching electron app)
       name: f.name,
       extension: f.extension,
       size: f.content?.length ?? 100,
@@ -97,11 +99,11 @@ function createMockContext(options: MockContextOptions = {}): PanelComponentProp
   const slices = new Map<string, DataSlice>();
   slices.set('fileTree', fileTreeSlice);
 
-  // Build file contents map (for readFile adapter)
+  // Build file contents map (for readFile adapter) - use relative paths as keys
   const allFileContents: Record<string, string> = { ...fileContents };
   for (const file of files) {
-    if (file.content && !allFileContents[file.path]) {
-      allFileContents[file.path] = file.content;
+    if (file.content && !allFileContents[file.relativePath]) {
+      allFileContents[file.relativePath] = file.content;
     }
   }
 
@@ -334,9 +336,9 @@ export const WithTrackedDocuments: Story = {
       files: [
         // Alexandria config
         {
-          path: `${REPOSITORY_PATH}/.alexandria/alexandria.json`,
-          relativePath: '.alexandria/alexandria.json',
-          name: 'alexandria.json',
+          path: `${REPOSITORY_PATH}/${CONFIG_FILENAME}`,
+          relativePath: CONFIG_FILENAME,
+          name: CONFIG_FILENAME,
           extension: '.json',
           content: ALEXANDRIA_CONFIG,
         },
@@ -420,9 +422,9 @@ export const MixedTrackedDocuments: Story = {
       files: [
         // Alexandria config
         {
-          path: `${REPOSITORY_PATH}/.alexandria/alexandria.json`,
-          relativePath: '.alexandria/alexandria.json',
-          name: 'alexandria.json',
+          path: `${REPOSITORY_PATH}/${CONFIG_FILENAME}`,
+          relativePath: CONFIG_FILENAME,
+          name: CONFIG_FILENAME,
           extension: '.json',
           content: ALEXANDRIA_CONFIG,
         },

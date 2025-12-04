@@ -22,9 +22,9 @@ export const DocumentList: React.FC<DocumentListProps> = ({
     <div style={{ display: 'flex', flexDirection: 'column' }}>
       {documents.map((doc) => (
         <AlexandriaDocItem
-          key={doc.path}
+          key={doc.relativePath}
           doc={doc}
-          onSelect={() => onDocumentClick(doc.path)}
+          onSelect={() => onDocumentClick(doc.relativePath)}
           onFileSelect={onFileSelect}
           repositoryRoot={repositoryPath}
           events={events}

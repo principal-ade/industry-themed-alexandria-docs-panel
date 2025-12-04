@@ -1,6 +1,6 @@
 {
   "name": "@industry-theme/alexandria-docs-panel",
-  "version": "0.4.0",
+  "version": "0.4.15",
   "description": "Alexandria documentation panel for Principal ADE - view and manage repository documentation with associated files tree view",
   "type": "module",
   "main": "dist/panels.bundle.js",
@@ -59,7 +59,7 @@
     "@principal-ade/industry-theme": "^0.1.3",
     "@principal-ade/panel-framework-core": "^0.1.9",
     "@principal-ade/utcp-panel-event": "^0.1.0",
-    "@principal-ai/alexandria-core-library": "^0.1.41",
+    "@principal-ai/alexandria-core-library": "^0.1.45",
     "@principal-ai/repository-abstraction": "^0.2.4",
     "clsx": "^2.1.1",
     "lucide-react": "^0.552.0"

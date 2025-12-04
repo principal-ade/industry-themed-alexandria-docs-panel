@@ -208,10 +208,29 @@ See [DESIGN.md](./DESIGN.md) for the full design document and architecture detai
 
 ---
 
-**Version**: 0.4.0 (Milestone 2 - In Progress)
+**Version**: 0.4.4 (Milestone 2 - In Progress)
 **Author**: Principal AI
 
 ## Changelog
+
+### v0.4.4 (2025-12-02)
+
+- 🔧 **Use CONFIG_FILENAME from core library** - No longer hardcoding config path; uses `CONFIG_FILENAME` constant from `@principal-ai/alexandria-core-library`
+
+### v0.4.3 (2025-12-02)
+
+- 🔧 **Panel uses only relative paths** - Panel no longer constructs absolute paths; host resolves relative paths via `openFile` and `readFile` adapters
+- 🔧 Simplified path handling throughout the panel
+
+### v0.4.2 (2025-12-02)
+
+- 🔧 **Fixed relative path handling** - Panel now uses relative paths for config detection (matching electron app FileTree format)
+- 🔧 Updated Storybook stories to use relative paths in FileTree mock
+
+### v0.4.1 (2025-12-02)
+
+- 🔧 **Improved config detection** - Uses `FileSystemAdapter.exists()` instead of manual fileTree checking
+- 🔧 Simplified hook by creating adapters once and reusing them
 
 ### v0.4.0 (2025-12-02)
 

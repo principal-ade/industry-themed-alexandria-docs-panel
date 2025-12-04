@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
+import { CONFIG_FILENAME } from '@principal-ai/alexandria-core-library';
 import type { PanelComponentProps } from '../types';
 import type { AlexandriaDocItemData, AlexandriaConfig } from './components/types';
 import { PanelHeader } from './components/PanelHeader';
@@ -27,18 +28,15 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
   // Use the new hook that handles adapters, slices, and fallbacks
   const { documents, isLoading, hasAlexandriaConfig } = useAlexandriaData(context);
 
-  // Get repository path for file tree
-  const repositoryPath =
-    context.currentScope.repository?.path ||
-    context.currentScope.workspace?.path ||
-    '';
+  // Repository path for components that need it (e.g., file tree building)
+  const repositoryPath = context.currentScope.repository?.path || '';
 
-  // Config file path
-  const configPath = repositoryPath ? `${repositoryPath}/.alexandria/alexandria.json` : '';
+  // Config file path from core library (host resolves relative to absolute)
+  const configPath = CONFIG_FILENAME;
 
   // Load Alexandria config when showing config view
   useEffect(() => {
-    if (!showConfigView || !hasAlexandriaConfig || !configPath) {
+    if (!showConfigView || !hasAlexandriaConfig) {
       return;
     }
 
@@ -60,7 +58,7 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
     };
 
     loadConfig();
-  }, [showConfigView, hasAlexandriaConfig, configPath, context.adapters]);
+  }, [showConfigView, hasAlexandriaConfig, context.adapters]);
 
   // Count tracked documents (those with file references)
   const trackedDocumentsCount = useMemo(() => {
@@ -121,9 +119,7 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
   };
 
   const handleOpenConfig = () => {
-    if (configPath) {
-      actions.openFile?.(configPath);
-    }
+    actions.openFile?.(configPath);
   };
 
   return (
