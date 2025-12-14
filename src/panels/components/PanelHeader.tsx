@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { Book, BookMarked, FileCode, Search, X } from 'lucide-react';
+import './styles.css';
 
 interface PanelHeaderProps {
   documentCount: number;
@@ -118,9 +119,18 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
 
         {/* Action buttons */}
         {!isLoading && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            {/* Tracked-only filter button */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              // CSS custom property for hover state
+              ['--theme-text' as string]: theme.colors.text,
+            }}
+          >
+            {/* Tracked-only filter button - uses CSS for hover */}
             <button
+              className={`header-button ${showTrackedOnly ? 'active' : ''}`}
               onClick={onToggleTrackedOnly}
               style={{
                 background: showTrackedOnly
@@ -136,17 +146,6 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
                 color: showTrackedOnly
                   ? theme.colors.primary
                   : theme.colors.textSecondary,
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                if (!showTrackedOnly) {
-                  e.currentTarget.style.color = theme.colors.text;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!showTrackedOnly) {
-                  e.currentTarget.style.color = theme.colors.textSecondary;
-                }
               }}
               title={
                 showTrackedOnly
@@ -157,8 +156,9 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
               <FileCode size={16} />
             </button>
 
-            {/* Search toggle button */}
+            {/* Search toggle button - uses CSS for hover */}
             <button
+              className={`header-button ${showSearch ? 'active' : ''}`}
               onClick={onToggleSearch}
               style={{
                 background: showSearch
@@ -174,17 +174,6 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
                 color: showSearch
                   ? theme.colors.primary
                   : theme.colors.textSecondary,
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                if (!showSearch) {
-                  e.currentTarget.style.color = theme.colors.text;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!showSearch) {
-                  e.currentTarget.style.color = theme.colors.textSecondary;
-                }
               }}
               title={showSearch ? 'Close search' : 'Search documents'}
             >
@@ -215,6 +204,7 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
           />
           <input
             type="text"
+            className="search-input"
             placeholder="Filter documents..."
             value={filterText}
             onChange={(e) => onFilterTextChange(e.target.value)}
@@ -230,16 +220,12 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
               outline: 'none',
               fontFamily: theme.fonts.body,
               transition: 'border-color 0.2s ease',
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = theme.colors.primary;
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = theme.colors.border;
+              ['--theme-primary' as string]: theme.colors.primary,
             }}
           />
           {filterText && (
             <button
+              className="clear-filter-button"
               onClick={onClearFilter}
               style={{
                 position: 'absolute',
@@ -252,13 +238,7 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 color: theme.colors.textSecondary,
-                transition: 'color 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = theme.colors.text;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = theme.colors.textSecondary;
+                ['--theme-text' as string]: theme.colors.text,
               }}
             >
               <X size={16} />

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, memo } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { FileText, FileCode, ChevronRight } from 'lucide-react';
 import type { AlexandriaDocItemData } from './types';
 import type { PanelEventEmitter } from '../../types';
 import { AssociatedFilesTree } from './AssociatedFilesTree';
+import './styles.css';
 
 interface AlexandriaDocItemProps {
   doc: AlexandriaDocItemData;
@@ -13,7 +14,7 @@ interface AlexandriaDocItemProps {
   events?: PanelEventEmitter;
 }
 
-export const AlexandriaDocItem: React.FC<AlexandriaDocItemProps> = ({
+const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
   doc,
   onSelect,
   onFileSelect,
@@ -26,23 +27,23 @@ export const AlexandriaDocItem: React.FC<AlexandriaDocItemProps> = ({
   const hasAssociatedFiles =
     doc.associatedFiles && doc.associatedFiles.length > 0;
 
-  const handleToggleExpand = (e: React.MouseEvent) => {
+  const handleToggleExpand = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsExpanded(!isExpanded);
-  };
+    setIsExpanded((prev) => !prev);
+  }, []);
 
-  const handleDocClick = (e: React.MouseEvent) => {
-    // Only open the doc if we're not clicking on the expand button
-    if (!(e.target as HTMLElement).closest('[data-expand-button]')) {
-      onSelect();
-    }
-  };
+  const handleDocClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Only open the doc if we're not clicking on the expand button
+      if (!(e.target as HTMLElement).closest('[data-expand-button]')) {
+        onSelect();
+      }
+    },
+    [onSelect]
+  );
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Update hover styling
-    e.currentTarget.style.backgroundColor = theme.colors.backgroundTertiary;
-
-    // Emit hover event with document data
+  const handleMouseEnter = useCallback(() => {
+    // Emit hover event with document data (styling handled by CSS)
     if (events) {
       events.emit({
         type: 'doc:hover',
@@ -51,13 +52,10 @@ export const AlexandriaDocItem: React.FC<AlexandriaDocItemProps> = ({
         payload: doc,
       });
     }
-  };
+  }, [events, doc]);
 
-  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
-    // Reset hover styling
-    e.currentTarget.style.backgroundColor = 'transparent';
-
-    // Emit hover event with null payload to clear highlights
+  const handleMouseLeave = useCallback(() => {
+    // Emit hover event with null payload to clear highlights (styling handled by CSS)
     if (events) {
       events.emit({
         type: 'doc:hover',
@@ -66,24 +64,21 @@ export const AlexandriaDocItem: React.FC<AlexandriaDocItemProps> = ({
         payload: null,
       });
     }
-  };
+  }, [events]);
 
   return (
     <div
       style={{
         borderBottom: `1px solid ${theme.colors.border}`,
         fontFamily: theme.fonts.body,
+        // Set CSS custom property for hover background color
+        ['--theme-bg-tertiary' as string]: theme.colors.backgroundTertiary,
       }}
     >
-      {/* Main document row */}
+      {/* Main document row - uses CSS class for hover instead of JS */}
       <div
+        className="alexandria-doc-item"
         onClick={handleDocClick}
-        style={{
-          padding: '16px 20px',
-          backgroundColor: 'transparent',
-          cursor: 'pointer',
-          transition: 'all 0.2s ease',
-        }}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -178,3 +173,6 @@ export const AlexandriaDocItem: React.FC<AlexandriaDocItemProps> = ({
     </div>
   );
 };
+
+// Wrap with React.memo for performance - prevents re-renders when props haven't changed
+export const AlexandriaDocItem = memo(AlexandriaDocItemComponent);

@@ -1,0 +1,36 @@
+/* Alexandria Docs Panel - Performance-optimized styles */
+
+/* Document item hover - uses CSS instead of JS style mutations */
+.alexandria-doc-item {
+  padding: 16px 20px;
+  background-color: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.alexandria-doc-item:hover {
+  background-color: var(--theme-bg-tertiary);
+}
+
+/* Header button hover states */
+.header-button {
+  transition: color 0.2s ease;
+}
+
+.header-button:not(.active):hover {
+  color: var(--theme-text) !important;
+}
+
+/* Search input focus state */
+.search-input:focus {
+  border-color: var(--theme-primary) !important;
+}
+
+/* Clear filter button hover */
+.clear-filter-button {
+  transition: color 0.2s ease;
+}
+
+.clear-filter-button:hover {
+  color: var(--theme-text) !important;
+}

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { CONFIG_FILENAME } from '@principal-ai/alexandria-core-library';
 import type { PanelComponentProps } from '../types';
@@ -91,36 +91,44 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
     return filtered;
   }, [documents, filterText, showTrackedOnly]);
 
-  const handleDocumentClick = (path: string) => {
-    actions.openFile?.(path);
-  };
+  const handleDocumentClick = useCallback(
+    (path: string) => {
+      actions.openFile?.(path);
+    },
+    [actions]
+  );
 
-  const handleFileSelect = (filePath: string) => {
-    actions.openFile?.(filePath);
-  };
+  const handleFileSelect = useCallback(
+    (filePath: string) => {
+      actions.openFile?.(filePath);
+    },
+    [actions]
+  );
 
-  const handleClearFilter = () => {
+  const handleClearFilter = useCallback(() => {
     setFilterText('');
-  };
+  }, []);
 
-  const handleToggleSearch = () => {
-    setShowSearch(!showSearch);
-    if (showSearch) {
-      setFilterText('');
-    }
-  };
+  const handleToggleSearch = useCallback(() => {
+    setShowSearch((prev) => {
+      if (prev) {
+        setFilterText('');
+      }
+      return !prev;
+    });
+  }, []);
 
-  const handleToggleTrackedOnly = () => {
-    setShowTrackedOnly(!showTrackedOnly);
-  };
+  const handleToggleTrackedOnly = useCallback(() => {
+    setShowTrackedOnly((prev) => !prev);
+  }, []);
 
-  const handleToggleConfigView = () => {
-    setShowConfigView(!showConfigView);
-  };
+  const handleToggleConfigView = useCallback(() => {
+    setShowConfigView((prev) => !prev);
+  }, []);
 
-  const handleOpenConfig = () => {
+  const handleOpenConfig = useCallback(() => {
     actions.openFile?.(configPath);
-  };
+  }, [actions, configPath]);
 
   return (
     <div
