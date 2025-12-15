@@ -103,16 +103,32 @@ export function useAlexandriaData(context: PanelContextValue): UseAlexandriaData
         const palace = new MemoryPalace(repositoryPath, fsAdapter);
         const overviews: DocumentOverview[] = await palace.getDocumentsOverview(globAdapter);
 
+        // Build a map of relativePath -> lastModified from fileTree for quick lookup
+        const mtimeMap = new Map<string, Date | undefined>();
+        if (fileTree?.allFiles) {
+          for (const file of fileTree.allFiles) {
+            mtimeMap.set(file.relativePath, file.lastModified);
+          }
+        }
+
         // Convert DocumentOverview to AlexandriaDocItemData
         const docs: AlexandriaDocItemData[] = overviews.map((doc) => ({
           path: doc.path,
           name: doc.title,
           relativePath: doc.relativePath,
-          mtime: undefined,
+          mtime: mtimeMap.get(doc.relativePath),
           associatedFiles: doc.associatedFiles,
           isTracked: doc.isTracked,
           hasUncommittedChanges: undefined,
         }));
+
+        // Sort by mtime descending (most recently modified first)
+        docs.sort((a, b) => {
+          if (!a.mtime && !b.mtime) return 0;
+          if (!a.mtime) return 1;
+          if (!b.mtime) return -1;
+          return b.mtime.getTime() - a.mtime.getTime();
+        });
 
         setPalaceDocuments(docs);
       } catch (err) {
@@ -162,6 +178,14 @@ export function useAlexandriaData(context: PanelContextValue): UseAlexandriaData
             hasUncommittedChanges: undefined,
           };
         });
+
+      // Sort by mtime descending (most recently modified first)
+      docs.sort((a, b) => {
+        if (!a.mtime && !b.mtime) return 0;
+        if (!a.mtime) return 1;
+        if (!b.mtime) return -1;
+        return b.mtime.getTime() - a.mtime.getTime();
+      });
 
       return {
         documents: docs,
