@@ -37,9 +37,14 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
   return (
     <div
       style={{
-        padding: '12px 16px',
+        height: '40px',
+        padding: '0 16px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
         borderBottom: `1px solid ${theme.colors.border}`,
         backgroundColor: theme.colors.backgroundLight,
+        boxSizing: 'border-box',
       }}
     >
       <div
