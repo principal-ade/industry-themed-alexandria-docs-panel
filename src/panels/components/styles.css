@@ -48,3 +48,12 @@
     clip-path: inset(0 0 0 0);
   }
 }
+
+/* Context menu item hover */
+.context-menu-item {
+  transition: background-color 0.15s ease;
+}
+
+.context-menu-item:hover {
+  background-color: var(--theme-bg-tertiary) !important;
+}

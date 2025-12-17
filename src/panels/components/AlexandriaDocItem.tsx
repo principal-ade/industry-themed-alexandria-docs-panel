@@ -1,10 +1,17 @@
-import React, { useState, useCallback, memo } from 'react';
+import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
+import { createPortal } from 'react-dom';
 import { useTheme } from '@principal-ade/industry-theme';
-import { FileText, FileCode, ChevronRight } from 'lucide-react';
+import { FileText, FileCode, ChevronRight, PanelRight, Copy, FileSymlink } from 'lucide-react';
 import type { AlexandriaDocItemData } from './types';
 import type { PanelEventEmitter } from '../../types';
 import { AssociatedFilesTree } from './AssociatedFilesTree';
 import './styles.css';
+
+interface ContextMenuState {
+  visible: boolean;
+  x: number;
+  y: number;
+}
 
 function getRelativeTime(date: Date): string {
   const now = new Date();
@@ -43,9 +50,60 @@ const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
 }) => {
   const { theme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+    visible: false,
+    x: 0,
+    y: 0,
+  });
+  const contextMenuRef = useRef<HTMLDivElement>(null);
 
   const hasAssociatedFiles =
     doc.associatedFiles && doc.associatedFiles.length > 0;
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
+        setContextMenu((prev) => ({ ...prev, visible: false }));
+      }
+    };
+
+    if (contextMenu.visible) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [contextMenu.visible]);
+
+  const handleContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setContextMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+    });
+  }, []);
+
+  const handleOpenInRightPanel = useCallback(() => {
+    if (events) {
+      events.emit({
+        type: 'doc:openInRightPanel',
+        source: 'alexandria-docs-panel',
+        timestamp: Date.now(),
+        payload: doc,
+      });
+    }
+    setContextMenu((prev) => ({ ...prev, visible: false }));
+  }, [events, doc]);
+
+  const handleCopyFullPath = useCallback(() => {
+    navigator.clipboard.writeText(doc.path);
+    setContextMenu((prev) => ({ ...prev, visible: false }));
+  }, [doc.path]);
+
+  const handleCopyRelativePath = useCallback(() => {
+    navigator.clipboard.writeText(doc.relativePath);
+    setContextMenu((prev) => ({ ...prev, visible: false }));
+  }, [doc.relativePath]);
 
   const handleToggleExpand = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -99,6 +157,7 @@ const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
       <div
         className="alexandria-doc-item"
         onClick={handleDocClick}
+        onContextMenu={handleContextMenu}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
@@ -209,6 +268,98 @@ const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
           repositoryRoot={repositoryRoot}
         />
       )}
+
+      {/* Context menu - rendered as portal to avoid parent opacity issues */}
+      {contextMenu.visible &&
+        createPortal(
+          <div
+            ref={contextMenuRef}
+            style={{
+              position: 'fixed',
+              top: contextMenu.y,
+              left: contextMenu.x,
+              backgroundColor: theme.colors.background,
+              border: `1px solid ${theme.colors.border}`,
+              borderRadius: '6px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              zIndex: 1000,
+              minWidth: '180px',
+              padding: '4px 0',
+              fontFamily: theme.fonts.body,
+              // CSS variable for hover state
+              ['--theme-bg-tertiary' as string]: theme.colors.backgroundTertiary,
+            }}
+          >
+            <button
+              onClick={handleOpenInRightPanel}
+              className="context-menu-item"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                width: '100%',
+                padding: '8px 12px',
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                fontSize: theme.fontSizes[1],
+                color: theme.colors.text,
+                textAlign: 'left',
+              }}
+            >
+              <PanelRight size={14} />
+              Open in Right Panel
+            </button>
+            <div
+              style={{
+                height: '1px',
+                backgroundColor: theme.colors.border,
+                margin: '4px 0',
+              }}
+            />
+            <button
+              onClick={handleCopyFullPath}
+              className="context-menu-item"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                width: '100%',
+                padding: '8px 12px',
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                fontSize: theme.fontSizes[1],
+                color: theme.colors.text,
+                textAlign: 'left',
+              }}
+            >
+              <Copy size={14} />
+              Copy Full Path
+            </button>
+            <button
+              onClick={handleCopyRelativePath}
+              className="context-menu-item"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                width: '100%',
+                padding: '8px 12px',
+                border: 'none',
+                background: 'none',
+                cursor: 'pointer',
+                fontSize: theme.fontSizes[1],
+                color: theme.colors.text,
+                textAlign: 'left',
+              }}
+            >
+              <FileSymlink size={14} />
+              Copy Relative Path
+            </button>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };
