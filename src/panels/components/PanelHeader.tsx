@@ -37,6 +37,7 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
   return (
     <div
       style={{
+        position: 'relative',
         height: '40px',
         padding: '0 16px',
         display: 'flex',
@@ -52,6 +53,7 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          visibility: showSearch ? 'hidden' : 'visible',
         }}
       >
         <div
@@ -188,67 +190,93 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
         )}
       </div>
 
-      {/* Filter Bar */}
+      {/* Filter Bar - overlays header content */}
       {showSearch && (
         <div
+          className="search-overlay"
           style={{
-            position: 'relative',
+            position: 'absolute',
+            top: '0',
+            left: '0',
+            right: '0',
+            bottom: '0',
             display: 'flex',
             alignItems: 'center',
-            marginTop: '12px',
+            padding: '0 16px',
+            backgroundColor: theme.colors.backgroundLight,
+            zIndex: 10,
           }}
         >
-          <Search
-            size={16}
-            color={theme.colors.textSecondary}
-            style={{
-              position: 'absolute',
-              left: '10px',
-              pointerEvents: 'none',
-            }}
-          />
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Filter documents..."
-            value={filterText}
-            onChange={(e) => onFilterTextChange(e.target.value)}
-            autoFocus
-            style={{
-              width: '100%',
-              padding: '8px 32px 8px 32px',
-              fontSize: theme.fontSizes[1],
-              color: theme.colors.text,
-              backgroundColor: theme.colors.backgroundSecondary,
-              border: `1px solid ${theme.colors.border}`,
-              borderRadius: '4px',
-              outline: 'none',
-              fontFamily: theme.fonts.body,
-              transition: 'border-color 0.2s ease',
-              ['--theme-primary' as string]: theme.colors.primary,
-            }}
-          />
-          {filterText && (
-            <button
-              className="clear-filter-button"
-              onClick={onClearFilter}
+          <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+            <Search
+              size={16}
+              color={theme.colors.textSecondary}
               style={{
                 position: 'absolute',
-                right: '8px',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: theme.colors.textSecondary,
-                ['--theme-text' as string]: theme.colors.text,
+                left: '10px',
+                pointerEvents: 'none',
               }}
-            >
-              <X size={16} />
-            </button>
-          )}
+            />
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Filter documents..."
+              value={filterText}
+              onChange={(e) => onFilterTextChange(e.target.value)}
+              autoFocus
+              style={{
+                width: '100%',
+                padding: '6px 32px 6px 32px',
+                fontSize: theme.fontSizes[1],
+                color: theme.colors.text,
+                backgroundColor: theme.colors.backgroundSecondary,
+                border: `1px solid ${theme.colors.border}`,
+                borderRadius: '4px',
+                outline: 'none',
+                fontFamily: theme.fonts.body,
+                transition: 'border-color 0.2s ease',
+                ['--theme-primary' as string]: theme.colors.primary,
+              }}
+            />
+            {filterText && (
+              <button
+                className="clear-filter-button"
+                onClick={onClearFilter}
+                style={{
+                  position: 'absolute',
+                  right: '8px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: theme.colors.textSecondary,
+                  ['--theme-text' as string]: theme.colors.text,
+                }}
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
+          <button
+            onClick={onToggleSearch}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '4px',
+              marginLeft: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: theme.colors.textSecondary,
+            }}
+            title="Close search"
+          >
+            <X size={16} />
+          </button>
         </div>
       )}
     </div>

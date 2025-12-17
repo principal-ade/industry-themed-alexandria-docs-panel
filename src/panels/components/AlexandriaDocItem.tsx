@@ -6,6 +6,26 @@ import type { PanelEventEmitter } from '../../types';
 import { AssociatedFilesTree } from './AssociatedFilesTree';
 import './styles.css';
 
+function getRelativeTime(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  const diffWeeks = Math.floor(diffDays / 7);
+  const diffMonths = Math.floor(diffDays / 30);
+  const diffYears = Math.floor(diffDays / 365);
+
+  if (diffSecs < 60) return 'just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffWeeks < 4) return `${diffWeeks}w ago`;
+  if (diffMonths < 12) return `${diffMonths}mo ago`;
+  return `${diffYears}y ago`;
+}
+
 interface AlexandriaDocItemProps {
   doc: AlexandriaDocItemData;
   onSelect: () => void;
@@ -85,7 +105,7 @@ const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
         <div
           style={{
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             gap: '12px',
           }}
         >
@@ -132,22 +152,41 @@ const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
-                fontSize: theme.fontSizes[2],
-                fontWeight: theme.fontWeights.medium,
-                color: theme.colors.text,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
                 marginBottom: '2px',
               }}
             >
-              {doc.name}
+              <div
+                style={{
+                  fontSize: theme.fontSizes[2],
+                  fontWeight: theme.fontWeights.medium,
+                  color: theme.colors.text,
+                }}
+              >
+                {doc.name}
+              </div>
+              {doc.mtime && (
+                <div
+                  style={{
+                    fontSize: theme.fontSizes[0],
+                    color: theme.colors.textSecondary,
+                    opacity: 0.7,
+                    flexShrink: 0,
+                    marginLeft: '8px',
+                  }}
+                >
+                  {getRelativeTime(doc.mtime)}
+                </div>
+              )}
             </div>
             <div
               style={{
                 fontSize: theme.fontSizes[1],
                 color: theme.colors.textSecondary,
                 opacity: 0.8,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                wordBreak: 'break-all',
               }}
             >
               {doc.relativePath}
