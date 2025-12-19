@@ -2,12 +2,11 @@ import React, { useState } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { FileCode, FileText, Copy, Check } from 'lucide-react';
 
-const AGENT_INSTALL_PROMPT = `Install the Alexandria CLI globally and initialize it in this repository to track documentation:
+const AGENT_INSTALL_PROMPT = `Initialize Alexandria in this repository to track documentation:
 
-npm install -g @principal-ai/alexandria-cli
-alexandria init
+npx @principal-ai/alexandria-cli init
 
-After initialization, use \`alexandria add-doc\` to track markdown documents with their related source files.`;
+After initialization, use \`npx @principal-ai/alexandria-cli add-doc\` to track markdown documents with their related source files.`;
 
 interface EmptyStateProps {
   showTrackedOnly: boolean;
