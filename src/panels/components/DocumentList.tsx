@@ -9,6 +9,8 @@ interface DocumentListProps {
   onFileSelect: (filePath: string) => void;
   repositoryPath: string;
   events?: PanelEventEmitter;
+  /** Currently selected/active file path */
+  selectedFile?: string;
 }
 
 // Individual item wrapper to memoize the onSelect callback per document
@@ -19,12 +21,14 @@ const DocumentItem = memo(
     onFileSelect,
     repositoryPath,
     events,
+    isSelected,
   }: {
     doc: AlexandriaDocItemData;
     onDocumentClick: (path: string) => void;
     onFileSelect: (filePath: string) => void;
     repositoryPath: string;
     events?: PanelEventEmitter;
+    isSelected: boolean;
   }) => {
     const handleSelect = useCallback(() => {
       onDocumentClick(doc.relativePath);
@@ -37,6 +41,7 @@ const DocumentItem = memo(
         onFileSelect={onFileSelect}
         repositoryRoot={repositoryPath}
         events={events}
+        isSelected={isSelected}
       />
     );
   }
@@ -45,7 +50,7 @@ const DocumentItem = memo(
 DocumentItem.displayName = 'DocumentItem';
 
 export const DocumentList: React.FC<DocumentListProps> = memo(
-  ({ documents, onDocumentClick, onFileSelect, repositoryPath, events }) => {
+  ({ documents, onDocumentClick, onFileSelect, repositoryPath, events, selectedFile }) => {
     return (
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {documents.map((doc) => (
@@ -56,6 +61,7 @@ export const DocumentList: React.FC<DocumentListProps> = memo(
             onFileSelect={onFileSelect}
             repositoryPath={repositoryPath}
             events={events}
+            isSelected={selectedFile === doc.relativePath}
           />
         ))}
       </div>

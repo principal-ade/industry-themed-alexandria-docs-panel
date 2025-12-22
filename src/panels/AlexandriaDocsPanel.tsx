@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { CONFIG_FILENAME } from '@principal-ai/alexandria-core-library';
-import type { PanelComponentProps } from '../types';
+import type { PanelComponentProps, ActiveFileSlice } from '../types';
 import type { AlexandriaDocItemData, AlexandriaConfig } from './components/types';
 import { PanelHeader } from './components/PanelHeader';
 import { DocumentList } from './components/DocumentList';
@@ -30,6 +30,10 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
 
   // Repository path for components that need it (e.g., file tree building)
   const repositoryPath = context.currentScope.repository?.path || '';
+
+  // Get the currently active/selected file from the active-file slice
+  const activeFileSlice = context.getSlice<ActiveFileSlice>('active-file');
+  const selectedFile = activeFileSlice?.data?.path;
 
   // Config file path from core library (host resolves relative to absolute)
   const configPath = CONFIG_FILENAME;
@@ -188,6 +192,7 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
             onFileSelect={handleFileSelect}
             repositoryPath={repositoryPath}
             events={events}
+            selectedFile={selectedFile}
           />
         )}
       </div>

@@ -39,6 +39,8 @@ interface AlexandriaDocItemProps {
   onFileSelect?: (filePath: string) => void;
   repositoryRoot?: string;
   events?: PanelEventEmitter;
+  /** Whether this document is currently selected/active */
+  isSelected?: boolean;
 }
 
 const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
@@ -47,6 +49,7 @@ const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
   onFileSelect,
   repositoryRoot,
   events,
+  isSelected = false,
 }) => {
   const { theme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -155,11 +158,15 @@ const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
     >
       {/* Main document row - uses CSS class for hover instead of JS */}
       <div
-        className="alexandria-doc-item"
+        className={`alexandria-doc-item${isSelected ? ' alexandria-doc-item--selected' : ''}`}
         onClick={handleDocClick}
         onContextMenu={handleContextMenu}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        style={isSelected ? {
+          backgroundColor: `${theme.colors.primary}20`,
+          borderLeft: `2px solid ${theme.colors.primary}`,
+        } : undefined}
       >
         <div
           style={{
@@ -220,8 +227,8 @@ const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
               <div
                 style={{
                   fontSize: theme.fontSizes[2],
-                  fontWeight: theme.fontWeights.medium,
-                  color: theme.colors.text,
+                  fontWeight: isSelected ? theme.fontWeights.semibold : theme.fontWeights.medium,
+                  color: isSelected ? theme.colors.primary : theme.colors.text,
                 }}
               >
                 {doc.name}
