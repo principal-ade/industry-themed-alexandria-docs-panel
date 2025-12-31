@@ -478,3 +478,98 @@ export const MixedTrackedDocuments: Story = {
     events: createMockEvents(),
   },
 };
+
+// Story 7: Varied relative times with tracked documents - showcases relative time and associated files
+export const VariedRelativeTimes: Story = {
+  args: {
+    context: createMockContext({
+      files: [
+        // Alexandria config (required for tracked docs)
+        {
+          path: `${REPOSITORY_PATH}/${CONFIG_FILENAME}`,
+          relativePath: CONFIG_FILENAME,
+          name: CONFIG_FILENAME,
+          extension: '.json',
+          content: ALEXANDRIA_CONFIG,
+        },
+        // View for just-updated doc (3 associated files)
+        {
+          path: `${REPOSITORY_PATH}/.alexandria/views/just-updated-view.json`,
+          relativePath: '.alexandria/views/just-updated-view.json',
+          name: 'just-updated-view.json',
+          extension: '.json',
+          content: createCodebaseView(
+            'just-updated-view',
+            'Just Updated',
+            'docs/just-updated.md',
+            ['src/components/Header.tsx', 'src/components/Footer.tsx', 'src/utils/helpers.ts']
+          ),
+        },
+        // View for hours-ago doc (5 associated files)
+        {
+          path: `${REPOSITORY_PATH}/.alexandria/views/hours-ago-view.json`,
+          relativePath: '.alexandria/views/hours-ago-view.json',
+          name: 'hours-ago-view.json',
+          extension: '.json',
+          content: createCodebaseView(
+            'hours-ago-view',
+            'Hours Ago',
+            'docs/hours-ago.md',
+            ['src/api/routes.ts', 'src/api/handlers.ts', 'src/api/middleware.ts', 'src/api/auth.ts', 'src/api/validators.ts']
+          ),
+        },
+        // Documents
+        {
+          path: `${REPOSITORY_PATH}/docs/just-updated.md`,
+          relativePath: 'docs/just-updated.md',
+          name: 'just-updated.md',
+          extension: '.md',
+          content: '# Just Updated\n\nThis doc was just updated.',
+          lastModified: new Date(), // just now
+        },
+        {
+          path: `${REPOSITORY_PATH}/docs/minutes-ago.md`,
+          relativePath: 'docs/minutes-ago.md',
+          name: 'minutes-ago.md',
+          extension: '.md',
+          content: '# Minutes Ago\n\nUpdated 15 minutes ago.',
+          lastModified: new Date(Date.now() - 15 * 60 * 1000), // 15m ago
+        },
+        {
+          path: `${REPOSITORY_PATH}/docs/hours-ago.md`,
+          relativePath: 'docs/hours-ago.md',
+          name: 'hours-ago.md',
+          extension: '.md',
+          content: '# Hours Ago\n\nUpdated 3 hours ago.',
+          lastModified: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3h ago
+        },
+        {
+          path: `${REPOSITORY_PATH}/docs/guides/days-ago.md`,
+          relativePath: 'docs/guides/days-ago.md',
+          name: 'days-ago.md',
+          extension: '.md',
+          content: '# Days Ago\n\nUpdated 4 days ago.',
+          lastModified: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000), // 4d ago
+        },
+        {
+          path: `${REPOSITORY_PATH}/docs/api/weeks-ago.md`,
+          relativePath: 'docs/api/weeks-ago.md',
+          name: 'weeks-ago.md',
+          extension: '.md',
+          content: '# Weeks Ago\n\nUpdated 2 weeks ago.',
+          lastModified: new Date(Date.now() - 2 * 7 * 24 * 60 * 60 * 1000), // 2w ago
+        },
+        {
+          path: `${REPOSITORY_PATH}/README.md`,
+          relativePath: 'README.md',
+          name: 'README.md',
+          extension: '.md',
+          content: '# README\n\nProject readme.',
+          lastModified: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // ~1.5mo ago
+        },
+      ],
+    }),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
+};

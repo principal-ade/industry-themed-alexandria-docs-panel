@@ -3,13 +3,13 @@
 /* Document item hover - uses CSS instead of JS style mutations */
 .alexandria-doc-item {
   padding: 16px 20px;
-  background-color: transparent;
+  background-color: var(--theme-bg);
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.15s ease;
 }
 
 .alexandria-doc-item:hover {
-  background-color: var(--theme-bg-tertiary);
+  background-color: var(--theme-bg-secondary);
 }
 
 /* Header button hover states */
@@ -55,5 +55,5 @@
 }
 
 .context-menu-item:hover {
-  background-color: var(--theme-bg-tertiary) !important;
+  background-color: var(--theme-bg-secondary) !important;
 }

@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { useTheme } from '@principal-ade/industry-theme';
-import { FileText, FileCode, ChevronRight, PanelRight, Copy, FileSymlink } from 'lucide-react';
+import { ChevronRight, PanelRight, Copy, FileSymlink } from 'lucide-react';
 import type { AlexandriaDocItemData } from './types';
 import type { PanelEventEmitter } from '../../types';
 import { AssociatedFilesTree } from './AssociatedFilesTree';
@@ -152,8 +152,9 @@ const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
       style={{
         borderBottom: `1px solid ${theme.colors.border}`,
         fontFamily: theme.fonts.body,
-        // Set CSS custom property for hover background color
-        ['--theme-bg-tertiary' as string]: theme.colors.backgroundTertiary,
+        // Set CSS custom properties for background colors
+        ['--theme-bg' as string]: theme.colors.background,
+        ['--theme-bg-secondary' as string]: theme.colors.backgroundSecondary,
       }}
     >
       {/* Main document row - uses CSS class for hover instead of JS */}
@@ -175,44 +176,24 @@ const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
             gap: '12px',
           }}
         >
-          {/* File icon - FileCode for linked docs (clickable), FileText for unlinked */}
-          <div
-            data-expand-button
-            onClick={hasAssociatedFiles ? handleToggleExpand : undefined}
-            style={{
-              flexShrink: 0,
-              position: 'relative',
-              cursor: hasAssociatedFiles ? 'pointer' : 'default',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {hasAssociatedFiles ? (
-              <>
-                <FileCode size={20} color={theme.colors.primary} />
-                {/* Small chevron decorator */}
-                <div
-                  style={{
-                    position: 'absolute',
-                    bottom: -2,
-                    right: -4,
-                    backgroundColor: theme.colors.backgroundLight,
-                    borderRadius: '2px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'transform 0.2s ease',
-                    transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
-                  }}
-                >
-                  <ChevronRight size={10} color={theme.colors.primary} />
-                </div>
-              </>
-            ) : (
-              <FileText size={20} color={theme.colors.textSecondary} />
-            )}
-          </div>
+          {/* Expand button for associated files */}
+          {hasAssociatedFiles && (
+            <div
+              data-expand-button
+              onClick={handleToggleExpand}
+              style={{
+                flexShrink: 0,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'transform 0.2s ease',
+                transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+              }}
+            >
+              <ChevronRight size={16} color={theme.colors.textSecondary} />
+            </div>
+          )}
 
           {/* Document info */}
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -249,17 +230,20 @@ const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
             </div>
             <div
               style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
                 fontSize: theme.fontSizes[1],
                 color: theme.colors.textSecondary,
                 opacity: 0.8,
-                wordBreak: 'break-all',
               }}
             >
-              {doc.relativePath}
+              <span style={{ wordBreak: 'break-all' }}>
+                {doc.relativePath.substring(0, doc.relativePath.lastIndexOf('/')) || '/'}
+              </span>
               {hasAssociatedFiles && doc.associatedFiles && (
-                <span style={{ marginLeft: '8px' }}>
-                  • {doc.associatedFiles.length} associated{' '}
-                  {doc.associatedFiles.length === 1 ? 'file' : 'files'}
+                <span style={{ flexShrink: 0, marginLeft: '8px' }}>
+                  {doc.associatedFiles.length} {doc.associatedFiles.length === 1 ? 'file' : 'files'}
                 </span>
               )}
             </div>
@@ -294,7 +278,7 @@ const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
               padding: '4px 0',
               fontFamily: theme.fonts.body,
               // CSS variable for hover state
-              ['--theme-bg-tertiary' as string]: theme.colors.backgroundTertiary,
+              ['--theme-bg-secondary' as string]: theme.colors.backgroundSecondary,
             }}
           >
             <button
