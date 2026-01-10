@@ -163,7 +163,8 @@ export function useAlexandriaData(context: PanelContextValue): UseAlexandriaData
           (file) =>
             file.extension === '.md' &&
             !file.path.includes('/.palace-work/') &&
-            !file.path.includes('/.backlog/')
+            !file.path.includes('/backlog/') &&
+            file.name !== 'SKILLS.md'
         )
         .map((file) => {
           const name = file.name.replace(/\.(md|MD)$/i, '');
