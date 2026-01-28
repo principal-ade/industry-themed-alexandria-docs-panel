@@ -1,6 +1,6 @@
 {
   "name": "@industry-theme/alexandria-docs-panel",
-  "version": "0.4.28",
+  "version": "0.4.29",
   "description": "Alexandria documentation panel for Principal ADE - view and manage repository documentation with associated files tree view",
   "type": "module",
   "main": "dist/panels.bundle.js",
