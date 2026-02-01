@@ -162,8 +162,8 @@ export function useAlexandriaData(context: PanelContextValue): UseAlexandriaData
         .filter(
           (file) =>
             file.extension === '.md' &&
-            !file.path.includes('/.palace-work/') &&
-            !file.path.includes('/backlog/') &&
+            !file.relativePath.includes('.palace-work/') &&
+            !file.relativePath.includes('backlog/') &&
             file.name !== 'SKILLS.md'
         )
         .map((file) => {
