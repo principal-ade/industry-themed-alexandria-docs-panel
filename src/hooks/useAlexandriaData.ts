@@ -113,7 +113,7 @@ export function useAlexandriaData(context: PanelContextValue): UseAlexandriaData
 
         // Convert DocumentOverview to AlexandriaDocItemData
         const docs: AlexandriaDocItemData[] = overviews.map((doc) => ({
-          path: doc.path,
+          path: `${repositoryPath}/${doc.relativePath}`.replace(/\/+/g, '/'),
           name: doc.title,
           relativePath: doc.relativePath,
           mtime: mtimeMap.get(doc.relativePath),
@@ -143,6 +143,30 @@ export function useAlexandriaData(context: PanelContextValue): UseAlexandriaData
     loadWithMemoryPalace();
   }, [fsAdapter, globAdapter, hasAlexandriaConfig, repositoryPath]);
 
+  // Memoize markdown files to prevent unnecessary recalculations
+  // Only recompute when markdown files actually change
+  const markdownFiles = useMemo(() => {
+    if (!fileTree?.allFiles) return null;
+
+    return fileTree.allFiles
+      .filter(
+        (file) =>
+          file.extension === '.md' &&
+          !file.relativePath.includes('.palace-work/') &&
+          !file.relativePath.includes('backlog/') &&
+          file.name !== 'SKILLS.md'
+      );
+  }, [fileTree?.allFiles]);
+
+  // Create a stable key from markdown files to detect actual changes
+  const markdownFilesKey = useMemo(() => {
+    if (!markdownFiles) return null;
+    // Create a key from paths and modification times
+    return markdownFiles
+      .map((f) => `${f.relativePath}:${f.lastModified?.getTime() ?? 0}`)
+      .join('|');
+  }, [markdownFiles]);
+
   // Determine which data source to use and compute documents
   const result = useMemo((): UseAlexandriaDataResult => {
     // Strategy 1: Use MemoryPalace data if available
@@ -157,20 +181,13 @@ export function useAlexandriaData(context: PanelContextValue): UseAlexandriaData
     }
 
     // Strategy 2: Derive from fileTree only (fallback - no tracking info)
-    if (fileTree?.allFiles && !fileTreeSlice?.loading) {
-      const docs: AlexandriaDocItemData[] = fileTree.allFiles
-        .filter(
-          (file) =>
-            file.extension === '.md' &&
-            !file.relativePath.includes('.palace-work/') &&
-            !file.relativePath.includes('backlog/') &&
-            file.name !== 'SKILLS.md'
-        )
+    if (markdownFiles && !fileTreeSlice?.loading) {
+      const docs: AlexandriaDocItemData[] = markdownFiles
         .map((file) => {
           const name = file.name.replace(/\.(md|MD)$/i, '');
 
           return {
-            path: file.path,
+            path: `${repositoryPath}/${file.relativePath}`.replace(/\/+/g, '/'),
             name,
             relativePath: file.relativePath,
             mtime: file.lastModified,
@@ -211,8 +228,10 @@ export function useAlexandriaData(context: PanelContextValue): UseAlexandriaData
     palaceDocuments,
     palaceLoading,
     palaceError,
-    fileTree,
-    fileTreeSlice,
+    markdownFilesKey,
+    repositoryPath,
+    fileTreeSlice?.loading,
+    fileTreeSlice?.error,
     hasAlexandriaConfig,
   ]);
 
