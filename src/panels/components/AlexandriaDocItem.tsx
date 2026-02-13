@@ -2,6 +2,11 @@ import React, { useState, useCallback, useEffect, useRef, memo } from 'react';
 import { createPortal } from 'react-dom';
 import { useTheme } from '@principal-ade/industry-theme';
 import { ChevronRight, PanelRight, Copy, FileSymlink } from 'lucide-react';
+import {
+  useDraggable,
+  DATA_TYPES,
+  DRAG_ACTIONS,
+} from '@principal-ade/panel-framework-core';
 import type { AlexandriaDocItemData } from './types';
 import type { PanelEventEmitter } from '../../types';
 import { AssociatedFilesTree } from './AssociatedFilesTree';
@@ -62,6 +67,19 @@ const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
 
   const hasAssociatedFiles =
     doc.associatedFiles && doc.associatedFiles.length > 0;
+
+  // Draggable hook for drag-and-drop support
+  const { isDragging, ...dragProps } = useDraggable({
+    dataType: DATA_TYPES.FILE_PATH,
+    primaryData: doc.path,  // Use absolute path
+    metadata: {
+      name: doc.name,
+      relativePath: doc.relativePath,
+    },
+    suggestedActions: [DRAG_ACTIONS.INSERT_PATH, DRAG_ACTIONS.OPEN],
+    sourcePanel: 'alexandria-docs-panel',
+    dragPreview: doc.name,
+  });
 
   // Close context menu when clicking outside
   useEffect(() => {
@@ -164,10 +182,14 @@ const AlexandriaDocItemComponent: React.FC<AlexandriaDocItemProps> = ({
         onContextMenu={handleContextMenu}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        style={isSelected ? {
-          backgroundColor: `${theme.colors.primary}20`,
-          borderLeft: `2px solid ${theme.colors.primary}`,
-        } : undefined}
+        {...dragProps}
+        style={{
+          ...(isSelected ? {
+            backgroundColor: `${theme.colors.primary}20`,
+            borderLeft: `2px solid ${theme.colors.primary}`,
+          } : undefined),
+          cursor: isDragging ? 'grabbing' : 'pointer',
+        }}
       >
         <div
           style={{

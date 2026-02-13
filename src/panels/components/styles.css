@@ -5,7 +5,7 @@
   padding: 16px 20px;
   background-color: var(--theme-bg);
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition: background-color 0.15s ease, opacity 0.2s ease;
 }
 
 .alexandria-doc-item:hover {
@@ -56,4 +56,13 @@
 
 .context-menu-item:hover {
   background-color: var(--theme-bg-secondary) !important;
+}
+
+/* Drag-and-drop states */
+.alexandria-doc-item[draggable="true"] {
+  cursor: grab;
+}
+
+.alexandria-doc-item[draggable="true"]:active {
+  cursor: grabbing;
 }
