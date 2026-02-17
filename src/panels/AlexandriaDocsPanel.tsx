@@ -1,7 +1,12 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
 import { CONFIG_FILENAME } from '@principal-ai/alexandria-core-library';
-import type { PanelComponentProps, ActiveFileSlice } from '../types';
+import type {
+  PanelComponentProps,
+  ActiveFileSlice,
+  AlexandriaDocsActions,
+  AlexandriaDocsContext,
+} from '../types';
 import type { AlexandriaDocItemData, AlexandriaConfig } from './components/types';
 import { PanelHeader } from './components/PanelHeader';
 import { DocumentList } from './components/DocumentList';
@@ -13,11 +18,9 @@ import { useAlexandriaData } from '../hooks';
 // Re-export types for external use
 export type { AlexandriaDocItemData } from './components/types';
 
-export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
-  context,
-  actions,
-  events,
-}) => {
+export const AlexandriaDocsPanel: React.FC<
+  PanelComponentProps<AlexandriaDocsActions, AlexandriaDocsContext>
+> = ({ context, actions, events }) => {
   const { theme } = useTheme();
   const [filterText, setFilterText] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -32,8 +35,8 @@ export const AlexandriaDocsPanel: React.FC<PanelComponentProps> = ({
   const repositoryPath = context.currentScope.repository?.path || '';
 
   // Get the currently active/selected file from the active-file slice
-  const activeFileSlice = context.getSlice<ActiveFileSlice>('active-file');
-  const selectedFile = activeFileSlice?.data?.path;
+  const { activeFile } = context;
+  const selectedFile = activeFile.data?.path;
 
   // Config file path from core library (host resolves relative to absolute)
   const configPath = CONFIG_FILENAME;

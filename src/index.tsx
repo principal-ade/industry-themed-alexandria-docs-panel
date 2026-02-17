@@ -1,12 +1,17 @@
 import { AlexandriaDocsPanel } from './panels/AlexandriaDocsPanel';
-import type { PanelDefinition, PanelContextValue } from './types';
+import type {
+  PanelDefinition,
+  PanelContextValue,
+  AlexandriaDocsActions,
+  AlexandriaDocsContext,
+} from './types';
 import { alexandriaDocsPanelTools } from './tools';
 
 /**
  * Export array of panel definitions.
  * This is the required export for panel extensions.
  */
-export const panels: PanelDefinition[] = [
+export const panels: PanelDefinition<AlexandriaDocsActions, AlexandriaDocsContext>[] = [
   {
     metadata: {
       id: 'principal-ade.alexandria-docs',
@@ -16,14 +21,14 @@ export const panels: PanelDefinition[] = [
       author: 'Principal AI',
       description: 'View and manage repository documentation with Alexandria',
       surfaces: ['manager', 'agent'],
-      slices: ['markdown'],
+      slices: ['fileTree', 'active-file'],
       // UTCP-compatible tools this panel exposes
       tools: alexandriaDocsPanelTools,
     },
     component: AlexandriaDocsPanel,
 
     // Optional: Called when this specific panel is mounted
-    onMount: async (context: PanelContextValue) => {
+    onMount: async (context: PanelContextValue<AlexandriaDocsContext>) => {
       // eslint-disable-next-line no-console
       console.log(
         '[Alexandria] Panel mounted:',
@@ -34,7 +39,7 @@ export const panels: PanelDefinition[] = [
     },
 
     // Optional: Called when this specific panel is unmounted
-    onUnmount: async (_context: PanelContextValue) => {
+    onUnmount: async (_context: PanelContextValue<AlexandriaDocsContext>) => {
       // eslint-disable-next-line no-console
       console.log('[Alexandria] Panel unmounted');
     },

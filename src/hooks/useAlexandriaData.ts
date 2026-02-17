@@ -11,7 +11,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import type { PanelContextValue } from '@principal-ade/panel-framework-core';
+import type { PanelContextValue, AlexandriaDocsContext } from '../types';
 import type { FileTree } from '@principal-ai/repository-abstraction';
 import type { AlexandriaDocItemData } from '../panels/components/types';
 
@@ -42,13 +42,15 @@ export interface UseAlexandriaDataResult {
  * 2. Fallback to fileTree only:
  *    - Derive markdown files from fileTree.allFiles (no tracking info)
  */
-export function useAlexandriaData(context: PanelContextValue): UseAlexandriaDataResult {
+export function useAlexandriaData(
+  context: PanelContextValue<AlexandriaDocsContext>
+): UseAlexandriaDataResult {
   const [palaceDocuments, setPalaceDocuments] = useState<AlexandriaDocItemData[] | null>(null);
   const [palaceLoading, setPalaceLoading] = useState(false);
   const [palaceError, setPalaceError] = useState<Error | null>(null);
 
   // Get fileTree slice
-  const fileTreeSlice = context.getSlice<FileTree>('fileTree');
+  const { fileTree: fileTreeSlice } = context;
   const fileTree = fileTreeSlice?.data;
 
   // Get repository path
