@@ -35,8 +35,8 @@ export const AlexandriaDocsPanel: React.FC<
   const repositoryPath = context.currentScope.repository?.path || '';
 
   // Get the currently active/selected file from the active-file slice
-  const { activeFile } = context;
-  const selectedFile = activeFile.data?.path;
+  const activeFile = context.activeFile;
+  const selectedFile = activeFile?.data?.path;
 
   // Config file path from core library (host resolves relative to absolute)
   const configPath = CONFIG_FILENAME;

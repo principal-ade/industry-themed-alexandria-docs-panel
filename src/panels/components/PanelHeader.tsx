@@ -202,7 +202,7 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
             bottom: '0',
             display: 'flex',
             alignItems: 'center',
-            padding: '0 16px',
+            padding: '0',
             backgroundColor: theme.colors.backgroundLight,
             zIndex: 10,
           }}
@@ -226,15 +226,15 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
               autoFocus
               style={{
                 width: '100%',
-                padding: '6px 32px 6px 32px',
+                padding: '0 32px',
+                height: '40px',
                 fontSize: theme.fontSizes[1],
                 color: theme.colors.text,
-                backgroundColor: theme.colors.backgroundSecondary,
-                border: `1px solid ${theme.colors.border}`,
-                borderRadius: '4px',
+                backgroundColor: theme.colors.backgroundLight,
+                border: 'none',
+                borderRadius: '0',
                 outline: 'none',
                 fontFamily: theme.fonts.body,
-                transition: 'border-color 0.2s ease',
                 ['--theme-primary' as string]: theme.colors.primary,
               }}
             />
@@ -266,8 +266,8 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
               background: 'none',
               border: 'none',
               cursor: 'pointer',
-              padding: '4px',
-              marginLeft: '8px',
+              padding: '0 12px',
+              height: '40px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

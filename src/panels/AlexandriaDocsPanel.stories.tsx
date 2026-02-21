@@ -107,6 +107,16 @@ function createMockContext(options: MockContextOptions = {}): PanelComponentProp
     }
   }
 
+  // Create activeFile slice (empty by default for stories)
+  const activeFileSlice: DataSlice<{ path: string } | null> = {
+    scope: 'workspace',
+    name: 'activeFile',
+    data: null,
+    loading: false,
+    error: null,
+    refresh: async () => {},
+  };
+
   return {
     currentScope: {
       type: 'repository',
@@ -115,6 +125,9 @@ function createMockContext(options: MockContextOptions = {}): PanelComponentProp
         path: REPOSITORY_PATH,
       },
     },
+    // Direct slice properties expected by context types (FileTreeContext, ActiveFileContext)
+    fileTree: fileTreeSlice,
+    activeFile: activeFileSlice,
     slices: slices as ReadonlyMap<string, DataSlice>,
     getSlice: <T,>(name: string): DataSlice<T> | undefined => {
       return slices.get(name) as DataSlice<T> | undefined;
