@@ -12,7 +12,6 @@ import type { AlexandriaConfig, ContextRule } from './types';
 interface ConfigViewProps {
   config: AlexandriaConfig;
   configPath?: string;
-  onOpenConfig?: () => void;
 }
 
 type TabId = 'context' | 'rules';
@@ -464,7 +463,6 @@ function generateConfigGuidance(config: AlexandriaConfig, configPath?: string): 
 export const ConfigView: React.FC<ConfigViewProps> = ({
   config,
   configPath,
-  onOpenConfig,
 }) => {
   const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState<TabId>('context');

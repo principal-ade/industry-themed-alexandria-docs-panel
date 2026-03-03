@@ -169,7 +169,6 @@ export const FullConfig: Story = {
   args: {
     config: fullConfig,
     configPath: '/Users/dev/my-awesome-project/.alexandriarc.json',
-    onOpenConfig: () => {},
   },
 };
 
@@ -178,7 +177,6 @@ export const LibraryConfig: Story = {
   args: {
     config: libraryConfig,
     configPath: '/packages/core/.alexandriarc.json',
-    onOpenConfig: () => {},
   },
 };
 
@@ -187,19 +185,10 @@ export const ServiceConfig: Story = {
   args: {
     config: serviceConfig,
     configPath: '/services/api-gateway/.alexandriarc.json',
-    onOpenConfig: () => {},
   },
 };
 
-// Story 5: Without open config action
-export const WithoutOpenAction: Story = {
-  args: {
-    config: fullConfig,
-    configPath: '/project/.alexandriarc.json',
-  },
-};
-
-// Story 6: Empty State (no config)
+// Story 5: Empty State (no config)
 export const EmptyState: StoryObj<typeof ConfigEmptyState> = {
   render: () => <ConfigEmptyState />,
 };

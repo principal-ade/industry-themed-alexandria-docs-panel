@@ -3,11 +3,10 @@ import { useTheme } from '@principal-ade/industry-theme';
 import { CONFIG_FILENAME } from '@principal-ai/alexandria-core-library';
 import type {
   PanelComponentProps,
-  ActiveFileSlice,
   AlexandriaDocsActions,
   AlexandriaDocsContext,
 } from '../types';
-import type { AlexandriaDocItemData, AlexandriaConfig } from './components/types';
+import type { AlexandriaConfig } from './components/types';
 import { PanelHeader } from './components/PanelHeader';
 import { DocumentList } from './components/DocumentList';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
@@ -133,10 +132,6 @@ export const AlexandriaDocsPanel: React.FC<
     setShowConfigView((prev) => !prev);
   }, []);
 
-  const handleOpenConfig = useCallback(() => {
-    actions.openFile?.(configPath);
-  }, [actions, configPath]);
-
   return (
     <div
       style={{
@@ -178,7 +173,6 @@ export const AlexandriaDocsPanel: React.FC<
           <ConfigView
             config={alexandriaConfig}
             configPath={configPath}
-            onOpenConfig={handleOpenConfig}
           />
         ) : isLoading ? (
           <LoadingSkeleton />

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider } from '@principal-ade/industry-theme';
 import { CONFIG_FILENAME } from '@principal-ai/alexandria-core-library';
 import { AlexandriaDocsPanel } from './AlexandriaDocsPanel';
-import type { PanelComponentProps, DataSlice } from '../types';
+import type { PanelComponentProps, DataSlice, PanelContextValue, AlexandriaDocsContext, ActiveFileSlice } from '../types';
 import type { FileTree, FileInfo, DirectoryInfo } from '@principal-ai/repository-abstraction';
 import picomatch from 'picomatch';
 
@@ -81,7 +81,7 @@ function createMockFileTree(files: MockFile[], repositoryPath: string): FileTree
 
 const REPOSITORY_PATH = '/mock/repository';
 
-function createMockContext(options: MockContextOptions = {}): PanelComponentProps['context'] {
+function createMockContext(options: MockContextOptions = {}): PanelContextValue<AlexandriaDocsContext> {
   const { files = [], loading = false, fileContents = {} } = options;
 
   // Build FileTree from files
@@ -96,9 +96,6 @@ function createMockContext(options: MockContextOptions = {}): PanelComponentProp
     refresh: async () => {},
   };
 
-  const slices = new Map<string, DataSlice>();
-  slices.set('fileTree', fileTreeSlice);
-
   // Build file contents map (for readFile adapter) - use relative paths as keys
   const allFileContents: Record<string, string> = { ...fileContents };
   for (const file of files) {
@@ -108,7 +105,7 @@ function createMockContext(options: MockContextOptions = {}): PanelComponentProp
   }
 
   // Create activeFile slice (empty by default for stories)
-  const activeFileSlice: DataSlice<{ path: string } | null> = {
+  const activeFileSlice: DataSlice<ActiveFileSlice> = {
     scope: 'workspace',
     name: 'activeFile',
     data: null,
@@ -125,24 +122,9 @@ function createMockContext(options: MockContextOptions = {}): PanelComponentProp
         path: REPOSITORY_PATH,
       },
     },
-    // Direct slice properties expected by context types (FileTreeContext, ActiveFileContext)
+    // Typed slice properties (FileTreeContext, ActiveFileContext)
     fileTree: fileTreeSlice,
     activeFile: activeFileSlice,
-    slices: slices as ReadonlyMap<string, DataSlice>,
-    getSlice: <T,>(name: string): DataSlice<T> | undefined => {
-      return slices.get(name) as DataSlice<T> | undefined;
-    },
-    getWorkspaceSlice: <T,>(name: string): DataSlice<T> | undefined => {
-      return slices.get(name) as DataSlice<T> | undefined;
-    },
-    getRepositorySlice: <T,>(name: string): DataSlice<T> | undefined => {
-      return slices.get(name) as DataSlice<T> | undefined;
-    },
-    hasSlice: (name: string) => slices.has(name),
-    isSliceLoading: (name: string) => {
-      const slice = slices.get(name);
-      return slice ? slice.loading : false;
-    },
     refresh: async () => {},
     // Adapters for FileTree-based MemoryPalace
     adapters: {

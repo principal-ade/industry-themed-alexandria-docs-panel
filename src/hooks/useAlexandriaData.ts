@@ -12,7 +12,6 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { PanelContextValue, AlexandriaDocsContext } from '../types';
-import type { FileTree } from '@principal-ai/repository-abstraction';
 import type { AlexandriaDocItemData } from '../panels/components/types';
 
 import {
