@@ -138,7 +138,7 @@ export const AlexandriaDocsPanel: React.FC<
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        backgroundColor: theme.colors.backgroundSecondary,
+        backgroundColor: theme.colors.background,
         borderRadius: '0px',
         overflow: 'hidden',
         fontFamily: theme.fonts.body,
