@@ -44,7 +44,7 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
         flexDirection: 'column',
         justifyContent: 'center',
         borderBottom: `1px solid ${theme.colors.border}`,
-        backgroundColor: theme.colors.backgroundLight,
+        backgroundColor: theme.colors.backgroundSecondary,
         boxSizing: 'border-box',
       }}
     >
@@ -203,7 +203,7 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
             display: 'flex',
             alignItems: 'center',
             padding: '0',
-            backgroundColor: theme.colors.backgroundLight,
+            backgroundColor: theme.colors.backgroundSecondary,
             zIndex: 10,
           }}
         >
@@ -230,7 +230,7 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
                 height: '40px',
                 fontSize: theme.fontSizes[1],
                 color: theme.colors.text,
-                backgroundColor: theme.colors.backgroundLight,
+                backgroundColor: theme.colors.backgroundSecondary,
                 border: 'none',
                 borderRadius: '0',
                 outline: 'none',
