@@ -12,7 +12,10 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import type { PanelContextValue, AlexandriaDocsContext } from '../types';
-import type { AlexandriaDocItemData } from '../panels/components/types';
+import type {
+  AlexandriaDocItemData,
+  PlanItemData,
+} from '../panels/components/types';
 
 import {
   MemoryPalace,
@@ -21,9 +24,11 @@ import {
   CONFIG_FILENAME,
 } from '@principal-ai/alexandria-core-library';
 import type { DocumentOverview } from '@principal-ai/alexandria-core-library';
+import type { FileInfo } from '@principal-ai/repository-abstraction';
 
 export interface UseAlexandriaDataResult {
   documents: AlexandriaDocItemData[];
+  plans: PlanItemData[];
   isLoading: boolean;
   hasAlexandriaConfig: boolean;
   error: Error | null;
@@ -44,13 +49,38 @@ export interface UseAlexandriaDataResult {
 export function useAlexandriaData(
   context: PanelContextValue<AlexandriaDocsContext>
 ): UseAlexandriaDataResult {
-  const [palaceDocuments, setPalaceDocuments] = useState<AlexandriaDocItemData[] | null>(null);
+  const [palaceDocuments, setPalaceDocuments] = useState<
+    AlexandriaDocItemData[] | null
+  >(null);
   const [palaceLoading, setPalaceLoading] = useState(false);
   const [palaceError, setPalaceError] = useState<Error | null>(null);
 
   // Get fileTree slice
-  const { fileTree: fileTreeSlice } = context;
+  const { fileTree: fileTreeSlice, rootFileTree: rootFileTreeSlice } = context;
   const fileTree = fileTreeSlice?.data;
+  const rootFileTree = rootFileTreeSlice?.data;
+
+  // Extract plans from .claude/plans/ directory in root repo
+  const plans = useMemo(() => {
+    if (!rootFileTree?.allFiles) return [];
+
+    return rootFileTree.allFiles
+      .filter((file: FileInfo) =>
+        file.relativePath.startsWith('.claude/plans/')
+      )
+      .map((file: FileInfo) => ({
+        path: file.relativePath,
+        name: file.name.replace(/\.(md|MD)$/i, ''),
+        relativePath: file.relativePath,
+        mtime: file.lastModified,
+      }))
+      .sort((a: PlanItemData, b: PlanItemData) => {
+        if (!a.mtime && !b.mtime) return 0;
+        if (!a.mtime) return 1;
+        if (!b.mtime) return -1;
+        return b.mtime.getTime() - a.mtime.getTime();
+      });
+  }, [rootFileTree?.allFiles]);
 
   // Get repository path
   const repositoryPath =
@@ -59,8 +89,12 @@ export function useAlexandriaData(
     '';
 
   // Get adapters from context (browser environment - readFile is always async)
-  const readFile = context.adapters?.readFile as ((path: string) => Promise<string>) | undefined;
-  const matchesPath = context.adapters?.matchesPath as ((pattern: string, path: string) => boolean) | undefined;
+  const readFile = context.adapters?.readFile as
+    | ((path: string) => Promise<string>)
+    | undefined;
+  const matchesPath = context.adapters?.matchesPath as
+    | ((pattern: string, path: string) => boolean)
+    | undefined;
 
   // Create FileSystemAdapter when we have required deps (used for config detection and data loading)
   const fsAdapter = useMemo(() => {
@@ -102,7 +136,8 @@ export function useAlexandriaData(
 
       try {
         const palace = new MemoryPalace(repositoryPath, fsAdapter);
-        const overviews: DocumentOverview[] = await palace.getDocumentsOverview(globAdapter);
+        const overviews: DocumentOverview[] =
+          await palace.getDocumentsOverview(globAdapter);
 
         // Build a map of relativePath -> lastModified from fileTree for quick lookup
         const mtimeMap = new Map<string, Date | undefined>();
@@ -133,7 +168,10 @@ export function useAlexandriaData(
 
         setPalaceDocuments(docs);
       } catch (err) {
-        console.error('[useAlexandriaData] Error loading with MemoryPalace:', err);
+        console.error(
+          '[useAlexandriaData] Error loading with MemoryPalace:',
+          err
+        );
         setPalaceError(err instanceof Error ? err : new Error(String(err)));
         setPalaceDocuments(null);
       } finally {
@@ -149,14 +187,13 @@ export function useAlexandriaData(
   const markdownFiles = useMemo(() => {
     if (!fileTree?.allFiles) return null;
 
-    return fileTree.allFiles
-      .filter(
-        (file) =>
-          file.extension === '.md' &&
-          !file.relativePath.includes('.palace-work/') &&
-          !file.relativePath.includes('backlog/') &&
-          file.name !== 'SKILLS.md'
-      );
+    return fileTree.allFiles.filter(
+      (file) =>
+        file.extension === '.md' &&
+        !file.relativePath.includes('.palace-work/') &&
+        !file.relativePath.includes('backlog/') &&
+        file.name !== 'SKILLS.md'
+    );
   }, [fileTree?.allFiles]);
 
   // Create a stable key from markdown files to detect actual changes
@@ -174,6 +211,7 @@ export function useAlexandriaData(
     if (palaceDocuments !== null) {
       return {
         documents: palaceDocuments,
+        plans,
         isLoading: palaceLoading,
         hasAlexandriaConfig,
         error: palaceError,
@@ -183,20 +221,19 @@ export function useAlexandriaData(
 
     // Strategy 2: Derive from fileTree only (fallback - no tracking info)
     if (markdownFiles && !fileTreeSlice?.loading) {
-      const docs: AlexandriaDocItemData[] = markdownFiles
-        .map((file) => {
-          const name = file.name.replace(/\.(md|MD)$/i, '');
+      const docs: AlexandriaDocItemData[] = markdownFiles.map((file) => {
+        const name = file.name.replace(/\.(md|MD)$/i, '');
 
-          return {
-            path: `${repositoryPath}/${file.relativePath}`.replace(/\/+/g, '/'),
-            name,
-            relativePath: file.relativePath,
-            mtime: file.lastModified,
-            associatedFiles: undefined,
-            isTracked: undefined,
-            hasUncommittedChanges: undefined,
-          };
-        });
+        return {
+          path: `${repositoryPath}/${file.relativePath}`.replace(/\/+/g, '/'),
+          name,
+          relativePath: file.relativePath,
+          mtime: file.lastModified,
+          associatedFiles: undefined,
+          isTracked: undefined,
+          hasUncommittedChanges: undefined,
+        };
+      });
 
       // Sort by mtime descending (most recently modified first)
       docs.sort((a, b) => {
@@ -208,6 +245,7 @@ export function useAlexandriaData(
 
       return {
         documents: docs,
+        plans,
         isLoading: fileTreeSlice?.loading ?? false,
         hasAlexandriaConfig,
         error: fileTreeSlice?.error ?? null,
@@ -220,6 +258,7 @@ export function useAlexandriaData(
 
     return {
       documents: [],
+      plans,
       isLoading,
       hasAlexandriaConfig,
       error: null,
@@ -234,6 +273,7 @@ export function useAlexandriaData(
     fileTreeSlice?.loading,
     fileTreeSlice?.error,
     hasAlexandriaConfig,
+    plans,
   ]);
 
   return result;

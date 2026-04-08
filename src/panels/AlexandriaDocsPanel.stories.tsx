@@ -2,8 +2,18 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeProvider } from '@principal-ade/industry-theme';
 import { CONFIG_FILENAME } from '@principal-ai/alexandria-core-library';
 import { AlexandriaDocsPanel } from './AlexandriaDocsPanel';
-import type { PanelComponentProps, DataSlice, PanelContextValue, AlexandriaDocsContext, ActiveFileSlice } from '../types';
-import type { FileTree, FileInfo, DirectoryInfo } from '@principal-ai/repository-abstraction';
+import type {
+  PanelComponentProps,
+  DataSlice,
+  PanelContextValue,
+  AlexandriaDocsContext,
+  ActiveFileSlice,
+} from '../types';
+import type {
+  FileTree,
+  FileInfo,
+  DirectoryInfo,
+} from '@principal-ai/repository-abstraction';
 import picomatch from 'picomatch';
 
 // ============================================================================
@@ -25,13 +35,18 @@ interface MockContextOptions {
   hasAlexandriaConfig?: boolean;
   /** Mock file contents for readFile adapter */
   fileContents?: Record<string, string>;
+  /** Files in the root repository (for plans in .claude/plans/) */
+  rootFiles?: MockFile[];
 }
 
 // ============================================================================
 // Mock FileTree Builder
 // ============================================================================
 
-function createMockFileTree(files: MockFile[], repositoryPath: string): FileTree {
+function createMockFileTree(
+  files: MockFile[],
+  repositoryPath: string
+): FileTree {
   // Use relative paths in the FileTree (matching real electron app behavior)
   const allFiles: FileInfo[] = files
     .filter((f) => !f.path.endsWith('/'))
@@ -80,12 +95,24 @@ function createMockFileTree(files: MockFile[], repositoryPath: string): FileTree
 // ============================================================================
 
 const REPOSITORY_PATH = '/mock/repository';
+const ROOT_PATH = '/mock/root';
 
-function createMockContext(options: MockContextOptions = {}): PanelContextValue<AlexandriaDocsContext> {
-  const { files = [], loading = false, fileContents = {} } = options;
+function createMockContext(
+  options: MockContextOptions = {}
+): PanelContextValue<AlexandriaDocsContext> {
+  const {
+    files = [],
+    loading = false,
+    fileContents = {},
+    rootFiles = [],
+  } = options;
 
   // Build FileTree from files
   const fileTree = createMockFileTree(files, REPOSITORY_PATH);
+
+  // Build root FileTree for plans
+  const rootFileTree =
+    rootFiles.length > 0 ? createMockFileTree(rootFiles, ROOT_PATH) : undefined;
 
   const fileTreeSlice: DataSlice<FileTree> = {
     scope: 'repository',
@@ -103,6 +130,12 @@ function createMockContext(options: MockContextOptions = {}): PanelContextValue<
       allFileContents[file.relativePath] = file.content;
     }
   }
+  // Add root file contents
+  for (const file of rootFiles) {
+    if (file.content && !allFileContents[file.relativePath]) {
+      allFileContents[file.relativePath] = file.content;
+    }
+  }
 
   // Create activeFile slice (empty by default for stories)
   const activeFileSlice: DataSlice<ActiveFileSlice> = {
@@ -113,6 +146,18 @@ function createMockContext(options: MockContextOptions = {}): PanelContextValue<
     error: null,
     refresh: async () => {},
   };
+
+  // Create rootFileTree slice if we have root files
+  const rootFileTreeSlice = rootFileTree
+    ? ({
+        scope: 'workspace',
+        name: 'rootFileTree',
+        data: rootFileTree,
+        loading: false,
+        error: null,
+        refresh: async () => {},
+      } as DataSlice<FileTree>)
+    : undefined;
 
   return {
     currentScope: {
@@ -125,6 +170,7 @@ function createMockContext(options: MockContextOptions = {}): PanelContextValue<
     // Typed slice properties (FileTreeContext, ActiveFileContext)
     fileTree: fileTreeSlice,
     activeFile: activeFileSlice,
+    rootFileTree: rootFileTreeSlice,
     refresh: async () => {},
     // Adapters for FileTree-based MemoryPalace
     adapters: {
@@ -355,11 +401,16 @@ export const WithTrackedDocuments: Story = {
           relativePath: '.alexandria/views/api-view.json',
           name: 'api-view.json',
           extension: '.json',
-          content: createCodebaseView('api-view', 'API Documentation', 'docs/api.md', [
-            'src/api/routes.ts',
-            'src/api/handlers/users.ts',
-            'src/api/handlers/auth.ts',
-          ]),
+          content: createCodebaseView(
+            'api-view',
+            'API Documentation',
+            'docs/api.md',
+            [
+              'src/api/routes.ts',
+              'src/api/handlers/users.ts',
+              'src/api/handlers/auth.ts',
+            ]
+          ),
         },
         // Markdown documents
         {
@@ -367,7 +418,8 @@ export const WithTrackedDocuments: Story = {
           relativePath: 'docs/architecture.md',
           name: 'architecture.md',
           extension: '.md',
-          content: '# Architecture\n\nThis document describes the system architecture.',
+          content:
+            '# Architecture\n\nThis document describes the system architecture.',
           lastModified: new Date('2025-11-10'),
         },
         {
@@ -497,7 +549,11 @@ export const VariedRelativeTimes: Story = {
             'just-updated-view',
             'Just Updated',
             'docs/just-updated.md',
-            ['src/components/Header.tsx', 'src/components/Footer.tsx', 'src/utils/helpers.ts']
+            [
+              'src/components/Header.tsx',
+              'src/components/Footer.tsx',
+              'src/utils/helpers.ts',
+            ]
           ),
         },
         // View for hours-ago doc (5 associated files)
@@ -510,7 +566,13 @@ export const VariedRelativeTimes: Story = {
             'hours-ago-view',
             'Hours Ago',
             'docs/hours-ago.md',
-            ['src/api/routes.ts', 'src/api/handlers.ts', 'src/api/middleware.ts', 'src/api/auth.ts', 'src/api/validators.ts']
+            [
+              'src/api/routes.ts',
+              'src/api/handlers.ts',
+              'src/api/middleware.ts',
+              'src/api/auth.ts',
+              'src/api/validators.ts',
+            ]
           ),
         },
         // Documents
@@ -566,5 +628,73 @@ export const VariedRelativeTimes: Story = {
     }),
     actions: createMockActions(),
     events: createMockEvents(),
+  },
+};
+
+// Story 8: With Plans (from .claude/plans/ directory) - shows plans toggle button
+export const WithPlans: Story = {
+  args: {
+    context: createMockContext({
+      files: [
+        {
+          path: `${REPOSITORY_PATH}/README.md`,
+          relativePath: 'README.md',
+          name: 'README.md',
+          extension: '.md',
+          lastModified: new Date('2025-11-14'),
+        },
+        {
+          path: `${REPOSITORY_PATH}/docs/architecture.md`,
+          relativePath: 'docs/architecture.md',
+          name: 'architecture.md',
+          extension: '.md',
+          lastModified: new Date('2025-11-10'),
+        },
+      ],
+      rootFiles: [
+        {
+          path: '.claude/plans/plan-1.md',
+          relativePath: '.claude/plans/plan-1.md',
+          name: 'plan-1.md',
+          extension: '.md',
+          lastModified: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2d ago
+          content: '# Plan 1\n\nA sample plan.',
+        },
+        {
+          path: '.claude/plans/plan-2.md',
+          relativePath: '.claude/plans/plan-2.md',
+          name: 'plan-2.md',
+          extension: '.md',
+          lastModified: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5d ago
+          content: '# Plan 2\n\nAnother sample plan.',
+        },
+        {
+          path: '.claude/plans/subdir/plan-3.md',
+          relativePath: '.claude/plans/subdir/plan-3.md',
+          name: 'plan-3.md',
+          extension: '.md',
+          lastModified: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1d ago
+          content: '# Plan 3\n\nA plan in a subdirectory.',
+        },
+        {
+          path: '.claude/config.json',
+          relativePath: '.claude/config.json',
+          name: 'config.json',
+          extension: '.json',
+          lastModified: new Date('2025-10-01'),
+          content: '{}',
+        },
+      ],
+    }),
+    actions: createMockActions(),
+    events: createMockEvents(),
+  },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Shows a target icon in the header to toggle Plans visibility. Plans appear in a separate section above documents when toggled on.',
+      },
+    },
   },
 };

@@ -13,3 +13,10 @@ export interface AlexandriaDocItemData {
   isTracked?: boolean;
   hasUncommittedChanges?: boolean;
 }
+
+export interface PlanItemData {
+  path: string;
+  name: string;
+  relativePath: string;
+  mtime?: Date;
+}

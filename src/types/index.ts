@@ -26,6 +26,7 @@ import type {
   PanelActions,
   FileTreeContext,
   ActiveFileContext,
+  DataSlice,
 } from '@principal-ade/panel-framework-core';
 
 /**
@@ -57,8 +58,14 @@ export interface AlexandriaDocsActions extends PanelActions {
  * Context interface for Alexandria Docs Panel
  * Combines common contexts needed for documentation management
  */
-export interface AlexandriaDocsContext extends FileTreeContext, ActiveFileContext {
-  // Alexandria docs panel uses:
-  // - fileTree: For discovering markdown files and building associated files tree
-  // - activeFile: For highlighting the currently selected file
+export interface AlexandriaDocsContext
+  extends FileTreeContext, ActiveFileContext {
+  /** File tree from the git repository */
+  // fileTree is inherited from FileTreeContext
+  /** Active file for highlighting the currently selected file */
+  // activeFile is inherited from ActiveFileContext
+  /** File tree from the root repository (for plans in .claude/plans/) */
+  rootFileTree?: DataSlice<
+    import('@principal-ai/repository-abstraction').FileTree
+  >;
 }

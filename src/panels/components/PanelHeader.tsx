@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTheme } from '@principal-ade/industry-theme';
-import { Book, BookMarked, FileCode, Search, X } from 'lucide-react';
+import { Book, BookMarked, FileCode, Search, Target, X } from 'lucide-react';
 import './styles.css';
 
 interface PanelHeaderProps {
@@ -16,6 +16,13 @@ interface PanelHeaderProps {
   onClearFilter: () => void;
   showConfigView?: boolean;
   onToggleConfigView?: () => void;
+  /** Number of plans from .claude/plans/ */
+  planCount?: number;
+  /** Whether to show plans */
+  showPlans?: boolean;
+  onToggleShowPlans?: () => void;
+  /** Text to display in header */
+  headerText?: string;
 }
 
 export const PanelHeader: React.FC<PanelHeaderProps> = ({
@@ -31,6 +38,10 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
   onClearFilter,
   showConfigView,
   onToggleConfigView,
+  planCount = 0,
+  showPlans = false,
+  onToggleShowPlans,
+  headerText,
 }) => {
   const { theme } = useTheme();
 
@@ -117,9 +128,10 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
                 fontWeight: theme.fontWeights.medium,
               }}
             >
-              {showConfigView
-                ? 'Alexandria Config'
-                : `${documentCount} ${documentCount === 1 ? 'document' : 'documents'}`}
+              {headerText ??
+                (showConfigView
+                  ? 'Alexandria Config'
+                  : `${documentCount} ${documentCount === 1 ? 'document' : 'documents'}`)}
             </span>
           )}
         </div>
@@ -162,6 +174,32 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
             >
               <FileCode size={16} />
             </button>
+
+            {/* Plans toggle button */}
+            {planCount > 0 && (
+              <button
+                className={`header-button ${showPlans ? 'active' : ''}`}
+                onClick={onToggleShowPlans}
+                style={{
+                  background: showPlans
+                    ? theme.colors.backgroundSecondary
+                    : 'none',
+                  border: `1px solid ${showPlans ? theme.colors.border : 'transparent'}`,
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: showPlans
+                    ? theme.colors.primary
+                    : theme.colors.textSecondary,
+                }}
+                title={showPlans ? 'Hide Claude plans' : 'Show Claude plans'}
+              >
+                <Target size={16} />
+              </button>
+            )}
 
             {/* Search toggle button - uses CSS for hover */}
             <button
@@ -207,7 +245,14 @@ export const PanelHeader: React.FC<PanelHeaderProps> = ({
             zIndex: 10,
           }}
         >
-          <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center' }}>
+          <div
+            style={{
+              position: 'relative',
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+            }}
+          >
             <Search
               size={16}
               color={theme.colors.textSecondary}

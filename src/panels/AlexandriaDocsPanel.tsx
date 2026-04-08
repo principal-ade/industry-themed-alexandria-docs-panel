@@ -9,13 +9,14 @@ import type {
 import type { AlexandriaConfig } from './components/types';
 import { PanelHeader } from './components/PanelHeader';
 import { DocumentList } from './components/DocumentList';
+import { PlansList } from './components/PlansList';
 import { LoadingSkeleton } from './components/LoadingSkeleton';
 import { EmptyState } from './components/EmptyState';
 import { ConfigView } from './components/ConfigView';
 import { useAlexandriaData } from '../hooks';
 
 // Re-export types for external use
-export type { AlexandriaDocItemData } from './components/types';
+export type { AlexandriaDocItemData, PlanItemData } from './components/types';
 
 export const AlexandriaDocsPanel: React.FC<
   PanelComponentProps<AlexandriaDocsActions, AlexandriaDocsContext>
@@ -25,10 +26,13 @@ export const AlexandriaDocsPanel: React.FC<
   const [showSearch, setShowSearch] = useState(false);
   const [showTrackedOnly, setShowTrackedOnly] = useState(false);
   const [showConfigView, setShowConfigView] = useState(false);
-  const [alexandriaConfig, setAlexandriaConfig] = useState<AlexandriaConfig | null>(null);
+  const [showPlans, setShowPlans] = useState(false);
+  const [alexandriaConfig, setAlexandriaConfig] =
+    useState<AlexandriaConfig | null>(null);
 
   // Use the new hook that handles adapters, slices, and fallbacks
-  const { documents, isLoading, hasAlexandriaConfig } = useAlexandriaData(context);
+  const { documents, plans, isLoading, hasAlexandriaConfig } =
+    useAlexandriaData(context);
 
   // Repository path for components that need it (e.g., file tree building)
   const repositoryPath = context.currentScope.repository?.path || '';
@@ -58,7 +62,10 @@ export const AlexandriaDocsPanel: React.FC<
         const config = JSON.parse(content) as AlexandriaConfig;
         setAlexandriaConfig(config);
       } catch (err) {
-        console.error('[AlexandriaDocsPanel] Failed to load Alexandria config:', err);
+        console.error(
+          '[AlexandriaDocsPanel] Failed to load Alexandria config:',
+          err
+        );
         setAlexandriaConfig(null);
       }
     };
@@ -132,6 +139,10 @@ export const AlexandriaDocsPanel: React.FC<
     setShowConfigView((prev) => !prev);
   }, []);
 
+  const handleToggleShowPlans = useCallback(() => {
+    setShowPlans((prev) => !prev);
+  }, []);
+
   return (
     <div
       style={{
@@ -145,7 +156,7 @@ export const AlexandriaDocsPanel: React.FC<
       }}
     >
       {/* Header - show when there are documents or loading */}
-      {(documents.length > 0 || isLoading) && (
+      {(documents.length > 0 || isLoading || plans.length > 0) && (
         <PanelHeader
           documentCount={documents.length}
           isLoading={isLoading}
@@ -159,6 +170,10 @@ export const AlexandriaDocsPanel: React.FC<
           onClearFilter={handleClearFilter}
           showConfigView={showConfigView}
           onToggleConfigView={handleToggleConfigView}
+          planCount={plans.length}
+          showPlans={showPlans}
+          onToggleShowPlans={handleToggleShowPlans}
+          headerText={showPlans ? `Claude Plans (${plans.length})` : undefined}
         />
       )}
 
@@ -170,12 +185,23 @@ export const AlexandriaDocsPanel: React.FC<
         }}
       >
         {showConfigView && alexandriaConfig ? (
-          <ConfigView
-            config={alexandriaConfig}
-            configPath={configPath}
-          />
+          <ConfigView config={alexandriaConfig} configPath={configPath} />
         ) : isLoading ? (
           <LoadingSkeleton />
+        ) : showPlans ? (
+          plans.length > 0 ? (
+            <PlansList
+              plans={plans}
+              onPlanClick={handleDocumentClick}
+              selectedFile={selectedFile}
+            />
+          ) : (
+            <EmptyState
+              showTrackedOnly={showTrackedOnly}
+              trackedDocumentsCount={trackedDocumentsCount}
+              filterText={filterText}
+            />
+          )
         ) : filteredDocuments.length === 0 ? (
           <EmptyState
             showTrackedOnly={showTrackedOnly}
